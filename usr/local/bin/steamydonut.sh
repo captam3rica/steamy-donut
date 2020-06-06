@@ -2,6 +2,7 @@
 
 # GitHub: @captam3rica
 
+########################################################################################
 #
 #   A script to install a packaged app and optionally set
 #   default preferences if the set_default_preferences.sh script is present.
@@ -17,32 +18,84 @@
 #         packaged version will only be installed if it is newer than the currently
 #         installed version.
 #
+#   Cool sources ...
+#
+#       - The case statement: https://bash.cyberciti.biz/guide/The_case_statement
+#
 ########################################################################################
 #
 #   TODO:
 #
 #       - Turn this tool into a command line Utility
 #           - Flags: --app-name, --app-version, --package-name
+#       - handle .dmg installs
+#       - Add builtin downloads for common apps
 #
+########################################################################################
 
 
-SCRIPT_VERSION="1.1.0"
+VERSION="1.1.0"
+
+declare -a ARG_ARRAY
+
+# Contains all arguments passed
+ARG_ARRAY=("${@}")
 
 
-RESULT=0
+usage() {
 
-# Set the name of the Application
-# This should be how the app name appears in the /Applications folder or wherever the
-# app is installed.
-APP_NAME="Symantec Endpoint Protection.app"
+    echo "Usage: $0 --version | --app-name | --app-version | --package-name | -h | --help"
+    echo ""
+    echo "    --app-name        Application name. This should be how the app name appears in the /Applications folder or wherever"
+    echo "                      the app is installed. Examples: \"Microsoft Teams.app\", \"Atom.app\", or \"Google Chrome.app\""
+    echo ""
+    echo "    --app-version     Version of app being installed. The version number should be of the format X.X.X.X"
+    echo "                      examples 1 or 1.1 or 1.1.1.1"
+    echo ""
+    echo "    --pkg-name        Name of package installer (your-installer.pkg)."
+    echo ""
+    echo "    --version         Print current version of $0"
+    echo ""
+    echo "    -h, --help        Print this usage."
+    echo ""
+    exit
+}
 
-# The version of the app being installed.
-# Should be of the format X.X.X.X examples 1 or 1.1 or 1.1.1.1
-# If there is a "-" then this needs to be replaced by a "." Example 1.1.1-1 to 1.1.1.1
-APP_VERSION=14.2.102
+if [[ "${#ARG_ARRAY}" == 0 ]] || [[ "${ARG_ARRAY}" == "-h" ]] \
+    || [[ "${ARG_ARRAY}" == "--help" ]]; then
+    # Print Usage
+    usage
+fi
 
-# Set the name of the pacakge
-PKG="SEP.mpkg"
+
+for (( i = 1; i <= ${#ARG_ARRAY[@]}; i++ )); do
+
+    if [[ "${ARG_ARRAY[$i]}" == "--app-name" ]]; then
+        APP_NAME="${ARG_ARRAY[$i+1]}"
+
+        # Make sure that an app name was passed.
+        if [[ "$APP_NAME" == "" ]]; then printf "Error: Please enter app name!\n"; usage; exit 1; fi
+    fi
+
+    if [[ "${ARG_ARRAY[$i]}" == "--app-version" ]]; then
+        APP_VERSION="${ARG_ARRAY[$i+1]}"
+    fi
+
+    if [[ "${ARG_ARRAY[$i]}" == "--pkg-name" ]]; then
+        APP_VERSION="${ARG_ARRAY[$i+1]}"
+    fi
+
+    if [[ "${ARG_ARRAY[$i]}" == "--version" ]]; then
+        APP_VERSION="${ARG_ARRAY[$i+1]}"
+    fi
+
+done
+
+echo "$APP_NAME"
+echo "$APP_VERSION"
+
+exit
+
 
 # Define the current working directory
 HERE=$(/usr/bin/dirname "$0")
@@ -211,8 +264,6 @@ main() {
         printf "Packaged version: %s\n" "$APP_VERSION"
         printf "Installed version: %s\n" "$installed_version"
 
-        exit
-
         # Loop over the packaged version and append version numbers to array.
         # Splits the version number on the "."
         # ${(@s/./)APP_VERSION}
@@ -250,6 +301,7 @@ main() {
 
         # Compare the packaged version to the current installed version
         comparison_result="$(compare_versions ${#pkg_vers_array[@]} ${#inst_vers_array[@]})"
+
 
         if [[ "$comparison_result" == "OLDER" ]] || [[ "$comparison_result" == "EQUAL" ]]; then
             # No need to install an older or equal version.
