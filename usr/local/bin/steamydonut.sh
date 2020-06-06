@@ -46,8 +46,9 @@ usage() {
 
     echo "Usage: $0 --version | --app-name | --app-version | --package-name | -h | --help"
     echo ""
-    echo "    --app-name        Application name. This should be how the app name appears in the /Applications folder or wherever"
-    echo "                      the app is installed. Examples: \"Microsoft Teams.app\", \"Atom.app\", or \"Google Chrome.app\""
+    echo "    --app-name        Application name. This should be how the app name appears in the /Applications folder or"
+    echo "                      wherever the app is installed."
+    echo "                      Examples: \"Microsoft Teams.app\", \"Atom.app\", or \"Google Chrome.app\""
     echo ""
     echo "    --app-version     Version of app being installed. The version number should be of the format X.X.X.X"
     echo "                      examples 1 or 1.1 or 1.1.1.1"
