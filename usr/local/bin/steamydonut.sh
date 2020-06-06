@@ -18,16 +18,12 @@
 #         packaged version will only be installed if it is newer than the currently
 #         installed version.
 #
-#   Cool sources ...
-#
-#       - The case statement: https://bash.cyberciti.biz/guide/The_case_statement
-#
 ########################################################################################
 #
 #   TODO:
 #
-#       - Turn this tool into a command line Utility
-#           - Flags: --app-name, --app-version, --package-name
+#       - [✅] Turn this tool into a command line Utility
+#           - Flags: --app-name, --app-version, --package-name, --verson, -h, --help
 #       - handle .dmg installs
 #       - Add builtin downloads for common apps
 #
@@ -51,7 +47,7 @@ ARG_ARRAY=("${@}")
 usage() {
     # Print this tools usage information
 
-    echo "usage: $SCRIPT_NAME --version | --app-name | --app-version | --package-name | -h | --help"
+    echo "usage: $SCRIPT_NAME [-h] --app-name --app-version --package-name [--version]"
     echo ""
     echo "Install packaged apps without accidently overwriting a newer version that may already be installed."
     echo ""
@@ -67,54 +63,10 @@ usage() {
     echo ""
     echo "    --version         Print current version of $SCRIPT_NAME"
     echo ""
-    echo "    -h, --help        Print this usage."
+    echo "    -h, --help        Print this usage page."
     echo ""
     exit
 }
-
-
-if [[ "${#ARG_ARRAY}" == 0 ]] || [[ "${ARG_ARRAY}" == "-h" ]] \
-    || [[ "${ARG_ARRAY}" == "--help" ]]; then
-    # Print Usage
-    usage
-fi
-
-
-for (( i = 1; i <= ${#ARG_ARRAY[@]}; i++ )); do
-
-    if [[ "${ARG_ARRAY[$i]}" == "--app-name" ]]; then
-        APP_NAME="${ARG_ARRAY[$i+1]}"
-
-        # Make sure that an app name was passed.
-        if [[ "$APP_NAME" == "" ]]; then printf "Error: Please enter app name!\n"; usage; exit 1; fi
-    fi
-
-    if [[ "${ARG_ARRAY[$i]}" == "--app-version" ]]; then
-        APP_VERSION="${ARG_ARRAY[$i+1]}"
-        if [[ "$APP_VERSION" == "" ]]; then printf "Error: Please enter app version!\n"; usage; exit 1; fi
-    fi
-
-    if [[ "${ARG_ARRAY[$i]}" == "--pkg-name" ]]; then
-        PKG_NAME="${ARG_ARRAY[$i+1]}"
-        if [[ "$PKG_NAME" == "" ]]; then printf "Error: Please enter package name!\n"; usage; exit 1; fi
-    fi
-
-    if [[ "${ARG_ARRAY[$i]}" == "--version" ]]; then
-        echo "$VERSION"
-    fi
-
-done
-
-echo "$APP_NAME"
-echo "$APP_VERSION"
-echo "$PKG_NAME"
-
-exit
-
-
-if [[ "$1" != "" ]]; then
-    APP_NAME="$1"
-fi
 
 
 return_current_app_version() {
@@ -247,6 +199,45 @@ install_package() {
 
 main() {
     # Run the main logic
+
+    # Validate Arguments
+    if [[ "${#ARG_ARRAY}" == 0 ]] || [[ "${ARG_ARRAY}" == "-h" ]] \
+        || [[ "${ARG_ARRAY}" == "--help" ]]; then
+        # Print Usage
+        usage
+    fi
+
+    # Validate the rest of the arguments
+    for (( i = 1; i <= ${#ARG_ARRAY[@]}; i++ )); do
+
+        if [[ "${ARG_ARRAY[$i]}" == "--app-name" ]]; then
+            APP_NAME="${ARG_ARRAY[$i+1]}"
+
+            # Make sure that an app name was passed.
+            if [[ "$APP_NAME" == "" ]]; then printf "Error: Please enter app name!\n"; usage; exit 1; fi
+        fi
+
+        if [[ "${ARG_ARRAY[$i]}" == "--app-version" ]]; then
+            APP_VERSION="${ARG_ARRAY[$i+1]}"
+            if [[ "$APP_VERSION" == "" ]]; then printf "Error: Please enter app version!\n"; usage; exit 1; fi
+        fi
+
+        if [[ "${ARG_ARRAY[$i]}" == "--pkg-name" ]]; then
+            PKG_NAME="${ARG_ARRAY[$i+1]}"
+            if [[ "$PKG_NAME" == "" ]]; then printf "Error: Please enter package name!\n"; usage; exit 1; fi
+        fi
+
+        if [[ "${ARG_ARRAY[$i]}" == "--version" ]]; then
+            echo "$VERSION"
+        fi
+
+    done
+
+    echo "$APP_NAME"
+    echo "$APP_VERSION"
+    echo "$PKG_NAME"
+
+    exit
 
     # Declare arrays that will hold version numbers.
     declare -a pkg_vers_array
