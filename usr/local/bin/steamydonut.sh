@@ -59,11 +59,11 @@ help_message() {
     echo ""
     echo "arguments:"
     echo "    --app-name        Application name. This should be how the app name appears in the /Applications folder or"
-    echo "                      wherever the app is installed."
-    echo "                      Examples: \"Microsoft Teams.app\", \"Atom.app\", or \"Google Chrome.app\""
+    echo "                      wherever the app is installed. If the app name contains spaces make sure to it in double quotes (\"\")."
+    echo "                      Examples: \"Microsoft Teams.app\", Atom.app, or \"Google Chrome.app\""
     echo ""
     echo "    --app-version     Version of app being installed. The version number should be of the format X.X.X.X."
-    echo "                      Examples: 1 or 1.1 or 1.1.1.1"
+    echo "                      Examples: 1 or 1.1 or 1.1.1-1"
     echo ""
     echo "    --pkg-name        Name of package installer (your-installer.pkg)."
     echo ""
@@ -224,7 +224,7 @@ main() {
         fi
 
         if [[ "${ARG_ARRAY[$i]}" == "--app-version" ]]; then
-            APP_VERSION="${ARG_ARRAY[$i+1]}"
+            APP_VERSION="$(/bin/echo ${ARG_ARRAY[$i+1]} | /usr/bin/sed 's/-/./g')"
             if [[ "$APP_VERSION" == "" ]]; then printf "Error: Please enter app version!\n"; usage; exit 1; fi
         fi
 
