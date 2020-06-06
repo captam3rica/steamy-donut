@@ -1,0 +1,276 @@
+#!/usr/bin/env zsh
+
+# GitHub: @captam3rica
+
+#
+#   A script to install a packaged app and optionally set
+#   default preferences if the set_default_preferences.sh script is present.
+#
+#   This script has the following capabilities
+#
+#       - Determine if the app is already installed. If not installed then the script
+#         will run a fresh installation of the app.
+#       - Determine the verion of the currently installed app.
+#       - Verify that the length of the version numbers are equal and find the
+#         differnce and append that number of zeros to the shorter version number.
+#       - Compare the current installed version to the packaged app version. The
+#         packaged version will only be installed if it is newer than the currently
+#         installed version.
+#
+########################################################################################
+#
+#   TODO:
+#
+#       - Turn this tool into a command line Utility
+#           - Flags: --app-name, --app-version, --package-name
+#
+
+
+SCRIPT_VERSION="1.1.0"
+
+
+RESULT=0
+
+# Set the name of the Application
+# This should be how the app name appears in the /Applications folder or wherever the
+# app is installed.
+APP_NAME="Symantec Endpoint Protection.app"
+
+# The version of the app being installed.
+# Should be of the format X.X.X.X examples 1 or 1.1 or 1.1.1.1
+# If there is a "-" then this needs to be replaced by a "." Example 1.1.1-1 to 1.1.1.1
+APP_VERSION=14.2.102
+
+# Set the name of the pacakge
+PKG="SEP.mpkg"
+
+# Define the current working directory
+HERE=$(/usr/bin/dirname "$0")
+
+PKG_PATH="$HERE/$PKG"
+
+
+if [[ "$1" != "" ]]; then
+    APP_NAME="$1"
+fi
+
+
+return_current_app_version() {
+    # Return the current application version
+    #
+    # $1 - Is the full path to the application.
+    local app_name="$1"
+    local installed_version=""
+
+    local find_app="$(/usr/bin/find /Applications -maxdepth 3 -name $app_name)"
+    local ret="$?"
+
+    # Check to see if the app is installed.
+    if [[ "$ret" -eq 0 ]] && [[ -d "$find_app" ]] \
+        && [[ "$app_name" == "$(/usr/bin/basename $find_app)" ]]; then
+        # If the previous command returns true and the returned object is a directory
+        # and the app that we are looking for is exactly equal to the app found by the
+        # find command.
+
+        # Gets the installed app version and replaces any "-" with "."
+        installed_version=$(/usr/bin/defaults read \
+            "$find_app/Contents/Info.plist" CFBundleShortVersionString | \
+            /usr/bin/sed "s/-/./g")
+
+    else
+        installed_version="None"
+    fi
+
+    printf "%s" "$installed_version"
+}
+
+
+compare_version_number_lengths() {
+    # Check to see if the array lengths are equal
+    #
+    # Args:
+    #   $1: pkg_vers_nums array
+    #   $2: inst_vers_nums array
+    local pkg_vers_nums="$1"
+    local inst_vers_nums="$2"
+    local result=""
+
+    if [[ "$pkg_vers_nums" -gt "$inst_vers_nums" ]]; then
+        # Packaged array length is greater than installed array length.
+        result=1
+        printf "%s" "$result"
+    fi
+
+    if [[ "$pkg_vers_nums" -lt "$inst_vers_nums" ]]; then
+        # Packaged array length is less than installed array length.
+        result=2
+        printf "%s" "$result"
+    fi
+}
+
+
+compare_versions() {
+    # Compare packaged version to installed version.
+    #
+    #   NOTE: pkg_vers_array and inst_vers_array array variables could not be passed
+    #         directly to this function. Instead they are inherited by this function
+    #         from the main function where the arrays are declared. This is due to
+    #         spaces being counted as additional index pointers when the arrays are
+    #         passed to this function as parameters.
+    #
+    # Args:
+    #   $1: package version array length
+    #   $2: installed version array length
+    local pkg_vers_array_len="$1"
+    local inst_vers_array_len="$2"
+    local result=""
+
+    # Compare each verson number in the packaged version to the version numbers in the
+    # installed version at each level to determine if the packaged version is older,
+    # newer, or the same as the installed version.
+    for (( i = 1; i <= $pkg_vers_array_len || i <= $inst_vers_array_len; i++ )); do
+        # Loop over the version numbers
+        # i starts at 1 because zshell array indexes start at 1
+
+        if [[ "${pkg_vers_array[$i]}" -eq "${inst_vers_array[$i]}" ]]; then
+            # See if the version numbers are equal
+
+            if [[ "$i" -eq "${#pkg_vers_array[@]}" ]]; then
+                # All version numbers are equal.
+                # Packaged version is the same as the intalled version
+                result="EQUAL"
+                printf "%s" "$result"
+            fi
+        fi
+
+        if [[ "${pkg_vers_array[$i]}" -gt "${inst_vers_array[$i]}" ]]; then
+            # See if packaged version number is greater than installed version
+            # number.
+            result="NEWER"
+            printf "%s" "$result"
+            break
+        fi
+
+        if [[ "${pkg_vers_array[$i]}" -lt "${inst_vers_array[$i]}" ]]; then
+            # See if the pacakged version number is less than installed version
+            # number.
+            result="OLDER"
+            printf "%s" "$result"
+            break
+        fi
+
+    done
+}
+
+
+install_package() {
+    # Install a .pkg file.
+    #
+    # $1 - The full path to the package.
+    # $2 - The target directory i.e. "/"
+    local pkg="$1"
+    local target="$2"
+
+    # Install the pacakge
+    /usr/sbin/installer -dumplog -verbose -pkg "$pkg" -target "$target"
+    RET="$?"
+
+    # Make sure the installer didn't fail.
+    if [ "$RET" -ne 0 ]; then
+        # Send the installation error to the logger
+        /usr/bin/logger "Failed to install $pkg ..."
+        RESULT=1
+    fi
+}
+
+main() {
+    # Run the main logic
+
+    # Declare arrays that will hold version numbers.
+    declare -a pkg_vers_array
+    declare -a inst_vers_array
+
+    printf "Checking to see if $APP_NAME is installed ...\n"
+    installed_version="$(return_current_app_version $APP_NAME)"
+
+    # See if the app is not installed.
+    if [ $installed_version = "None" ]; then
+        printf "The app is currently not installed ...\n"
+        printf "Installing the app for the first time ...\n"
+        install_package "$PKG_PATH" "/"
+
+        # If the set_default_preferences.sh script is present in the installer.
+        if [[ -f "$HERE/set_default_preferences.sh" ]]; then
+            printf "Setting default settings for %s.app ...\n" "$APP_NAME"
+            /bin/zsh "$HERE/set_default_preferences.sh"
+        fi
+
+    else
+
+        printf "%s is installed ...\n" "$APP_NAME"
+        printf "Packaged version: %s\n" "$APP_VERSION"
+        printf "Installed version: %s\n" "$installed_version"
+
+        exit
+
+        # Loop over the packaged version and append version numbers to array.
+        # Splits the version number on the "."
+        # ${(@s/./)APP_VERSION}
+        for number in "${(@s/./)APP_VERSION}"; do
+            pkg_vers_array+=("$number")
+        done
+
+        # Loop over the installed version and append version numbers to array.
+        # Splits the version number on the "."
+        for number in "${(@s/./)installed_version}"; do
+            inst_vers_array+=("$number")
+        done
+
+        # Care version numbers lengths and return result.
+        vers_num_len_result="$(compare_version_number_lengths ${#pkg_vers_array[@]} ${#inst_vers_array[@]})"
+
+        if [[ "$vers_num_len_result" -eq 1 ]]; then
+            # Append zeros to installed version array so that it matches the length of
+            # the packaged version array length.
+            printf "Package version numbers is longer ...\n"
+            printf "Appending zeros to version ...\n"
+            for (( i = ${#inst_vers_array[@]}; i < ${#pkg_vers_array[@]}; i++ )); do
+                inst_vers_array+=(0)
+            done
+        fi
+
+        if [[ "$vers_num_len_result" -eq 2 ]]; then
+            #statements
+            printf "Package version numbers is shorter ...\n"
+            printf "Appending zeros to version ...\n"
+            for (( i = ${#pkg_vers_array[@]}; i < ${#inst_vers_array[@]}; i++ )); do
+                pkg_vers_array+=(0)
+            done
+        fi
+
+        # Compare the packaged version to the current installed version
+        comparison_result="$(compare_versions ${#pkg_vers_array[@]} ${#inst_vers_array[@]})"
+
+        if [[ "$comparison_result" == "OLDER" ]] || [[ "$comparison_result" == "EQUAL" ]]; then
+            # No need to install an older or equal version.
+            printf "Packaged version is "%s" ...\n" "$comparison_result"
+            printf "Skipping installation ...\n"
+            RESULT=1
+
+        else
+            printf "Installing %s ...\n" "$PKG"
+            install_package "$PKG_PATH" "/"
+
+            # If the set_default_preferences.sh script is present in the installer.
+            if [[ -f "$HERE/set_default_preferences.sh" ]]; then
+                printf "Setting default settings for %s.app ...\n" "$APP_NAME"
+                /bin/zsh "$HERE/set_default_preferences.sh"
+            fi
+        fi
+    fi
+}
+
+# Call main
+main
+
+exit "$RESULT"
