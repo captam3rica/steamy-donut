@@ -49,6 +49,7 @@ ARG_ARRAY=("${@}")
 
 
 usage() {
+    # Print this tools usage information
 
     echo "usage: $SCRIPT_NAME --version | --app-name | --app-version | --package-name | -h | --help"
     echo ""
