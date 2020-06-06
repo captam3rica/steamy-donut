@@ -44,8 +44,14 @@ declare -a ARG_ARRAY
 ARG_ARRAY=("${@}")
 
 
-usage() {
-    # Print this tools usage information
+usage(){
+    # Print this tools usage
+    echo "usage: $SCRIPT_NAME [-h] --app-name --app-version --package-name [--version]"
+}
+
+
+help_message() {
+    # Print this tools help information
 
     echo "usage: $SCRIPT_NAME [-h] --app-name --app-version --package-name [--version]"
     echo ""
@@ -63,7 +69,7 @@ usage() {
     echo ""
     echo "    --version         Print current version of $SCRIPT_NAME"
     echo ""
-    echo "    -h, --help        Print this usage page."
+    echo "    -h, --help        Print this help message."
     echo ""
     exit
 }
@@ -201,10 +207,10 @@ main() {
     # Run the main logic
 
     # Validate Arguments
-    if [[ "${#ARG_ARRAY}" == 0 ]] || [[ "${ARG_ARRAY}" == "-h" ]] \
-        || [[ "${ARG_ARRAY}" == "--help" ]]; then
-        # Print Usage
-        usage
+    if [[ "${#ARG_ARRAY}" == 0 ]] || [[ "${ARG_ARRAY}" == "-h" ]] || \
+        [[ "${ARG_ARRAY}" == "--help" ]]; then
+        # Print this tool's help message
+        help_message
     fi
 
     # Validate the rest of the arguments
@@ -233,9 +239,17 @@ main() {
 
     done
 
-    echo "$APP_NAME"
-    echo "$APP_VERSION"
-    echo "$PKG_NAME"
+    # Make sure that the required args are given
+    if [[ -z "$APP_NAME" ]] || [[ -z "$APP_VERSION" ]] || [[ -z "$PKG_NAME" ]] ; then
+        usage
+        printf "$SCRIPT_NAME: Error: The following arguments are required: --app-name, --app-version, --pkg-name\n"
+        exit 1
+    fi
+
+    echo "App name: $APP_NAME"
+    echo "App version: $APP_VERSION"
+    echo "Package name: $PKG_NAME"
+
 
     exit
 
