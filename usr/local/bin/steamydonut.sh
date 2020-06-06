@@ -206,6 +206,10 @@ install_package() {
 main() {
     # Run the main logic
 
+    # Declare arrays that will hold version numbers.
+    declare -a pkg_vers_array
+    declare -a inst_vers_array
+
     # Validate Arguments
     if [[ "${#ARG_ARRAY}" == 0 ]] || [[ "${ARG_ARRAY}" == "-h" ]] || \
         [[ "${ARG_ARRAY}" == "--help" ]]; then
@@ -245,17 +249,6 @@ main() {
         printf "$SCRIPT_NAME: Error: The following arguments are required: --app-name, --app-version, --pkg-name\n"
         exit 1
     fi
-
-    echo "App name: $APP_NAME"
-    echo "App version: $APP_VERSION"
-    echo "Package name: $PKG_NAME"
-
-
-    exit
-
-    # Declare arrays that will hold version numbers.
-    declare -a pkg_vers_array
-    declare -a inst_vers_array
 
     printf "Checking to see if $APP_NAME is installed ...\n"
     installed_version="$(return_current_app_version $APP_NAME)"
@@ -297,7 +290,7 @@ main() {
         if [[ "$vers_num_len_result" -eq 1 ]]; then
             # Append zeros to installed version array so that it matches the length of
             # the packaged version array length.
-            printf "Package version numbers is longer ...\n"
+            printf "Package version number is longer ...\n"
             printf "Appending zeros to version ...\n"
             for (( i = ${#inst_vers_array[@]}; i < ${#pkg_vers_array[@]}; i++ )); do
                 inst_vers_array+=(0)
@@ -306,7 +299,7 @@ main() {
 
         if [[ "$vers_num_len_result" -eq 2 ]]; then
             #statements
-            printf "Package version numbers is shorter ...\n"
+            printf "Package version number is shorter ...\n"
             printf "Appending zeros to version ...\n"
             for (( i = ${#pkg_vers_array[@]}; i < ${#inst_vers_array[@]}; i++ )); do
                 pkg_vers_array+=(0)
