@@ -36,6 +36,12 @@
 
 VERSION="1.1.0"
 
+# Define the current working directory
+HERE=$(/usr/bin/dirname "$0")
+
+# Script name
+SCRIPT_NAME="$(/usr/bin/basename $0)"
+
 declare -a ARG_ARRAY
 
 # Contains all arguments passed
@@ -44,23 +50,27 @@ ARG_ARRAY=("${@}")
 
 usage() {
 
-    echo "Usage: $0 --version | --app-name | --app-version | --package-name | -h | --help"
+    echo "usage: $SCRIPT_NAME --version | --app-name | --app-version | --package-name | -h | --help"
     echo ""
+    echo "Install packaged apps without accidently overwriting a newer version that may already be installed."
+    echo ""
+    echo "arguments:"
     echo "    --app-name        Application name. This should be how the app name appears in the /Applications folder or"
     echo "                      wherever the app is installed."
     echo "                      Examples: \"Microsoft Teams.app\", \"Atom.app\", or \"Google Chrome.app\""
     echo ""
-    echo "    --app-version     Version of app being installed. The version number should be of the format X.X.X.X"
-    echo "                      examples 1 or 1.1 or 1.1.1.1"
+    echo "    --app-version     Version of app being installed. The version number should be of the format X.X.X.X."
+    echo "                      Examples: 1 or 1.1 or 1.1.1.1"
     echo ""
     echo "    --pkg-name        Name of package installer (your-installer.pkg)."
     echo ""
-    echo "    --version         Print current version of $0"
+    echo "    --version         Print current version of $SCRIPT_NAME"
     echo ""
     echo "    -h, --help        Print this usage."
     echo ""
     exit
 }
+
 
 if [[ "${#ARG_ARRAY}" == 0 ]] || [[ "${ARG_ARRAY}" == "-h" ]] \
     || [[ "${ARG_ARRAY}" == "--help" ]]; then
@@ -80,28 +90,25 @@ for (( i = 1; i <= ${#ARG_ARRAY[@]}; i++ )); do
 
     if [[ "${ARG_ARRAY[$i]}" == "--app-version" ]]; then
         APP_VERSION="${ARG_ARRAY[$i+1]}"
+        if [[ "$APP_VERSION" == "" ]]; then printf "Error: Please enter app version!\n"; usage; exit 1; fi
     fi
 
     if [[ "${ARG_ARRAY[$i]}" == "--pkg-name" ]]; then
-        APP_VERSION="${ARG_ARRAY[$i+1]}"
+        PKG_NAME="${ARG_ARRAY[$i+1]}"
+        if [[ "$PKG_NAME" == "" ]]; then printf "Error: Please enter package name!\n"; usage; exit 1; fi
     fi
 
     if [[ "${ARG_ARRAY[$i]}" == "--version" ]]; then
-        APP_VERSION="${ARG_ARRAY[$i+1]}"
+        echo "$VERSION"
     fi
 
 done
 
 echo "$APP_NAME"
 echo "$APP_VERSION"
+echo "$PKG_NAME"
 
 exit
-
-
-# Define the current working directory
-HERE=$(/usr/bin/dirname "$0")
-
-PKG_PATH="$HERE/$PKG"
 
 
 if [[ "$1" != "" ]]; then
