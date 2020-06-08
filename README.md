@@ -37,7 +37,6 @@ arguments:
 
 ##   TODO:
 
-- [✅] Turn this tool into a command line Utility
-    - Flags: --app-name, --app-version, --package-name, --verson, -h, --help
-- handle .dmg installs
-- Add builtin downloads for common apps
+✅ - Turn this tool into a command line Utility
+🔲 - handle .dmg installs
+🔲 - Add builtin downloads for common apps
