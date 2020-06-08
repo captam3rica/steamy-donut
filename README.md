@@ -1,5 +1,10 @@
 # Steamy Donut
 
+![](https://img.shields.io/badge/release-0.2.1-blue)&nbsp;
+![](https://img.shields.io/badge/code-zshell-blue)&nbsp;
+![](https://img.shields.io/badge/syntax-bashisms-blue)&nbsp;
+![](https://img.shields.io/badge/macOS-10.14%2B-success)&nbsp;
+
 Easily install packaged apps without installing over a newer version. This project will start with installing `.pkg` installers, but will grow to handle `.dmg` and other methods of installing macOS apps.
 
 **NOTE**: THE CONTENTS OF THIS REPO ARE A WORK IN PROGRESS ...
@@ -8,9 +13,9 @@ Easily install packaged apps without installing over a newer version. This proje
 ## Usage
 
 ```
-usage: steamydonut.sh [-h] --app-name --app-version --package-name [--version]
+usage: steamydonut.sh [-h] --app-name <"app_name"> --app-version <version> --pkg-name <"package_name"> [--path <full_path>] [--list-apps] [--get-app <keyword>] [--version]
 
-Install packaged apps without accidentally overwriting a newer version that may already be installed.
+Install packaged apps without accidently overwriting a newer version that may already be installed.
 
 arguments:
       --app-name      Application name. This should be how the app name appears in the /Applications 
@@ -26,12 +31,12 @@ arguments:
       --path          Path to installer. If a path is not provided it is assumed that the installer file 
                       is in the current working directory.
 
-      --list-apps     See a list of apps available for internet download.
+      --list-apps     See a list of apps avaialbe for internet download.
 
       --get-app       Download and install specified app from the internet. For example, to download and 
                       install the latest version of Google Chrome use the following flag and app keyword: 
 
-                          --get-app googlechrome
+                          steamydonut.sh --get-app googlechrome
 
       --version       Print current version of steamydonut.sh
 
