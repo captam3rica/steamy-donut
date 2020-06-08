@@ -23,8 +23,11 @@
 
 VERSION="1.2.0"
 
-# Define the current working directory
-HERE=$(/usr/bin/dirname "$0")
+# Define this scripts current working directory
+SCRIPT_DIR=$(/usr/bin/dirname "$0")
+
+# The present working directory
+HERE="$(pwd)"
 
 # Script name
 SCRIPT_NAME="$(/usr/bin/basename $0)"
@@ -85,17 +88,21 @@ main() {
         exit 1
     fi
 
-    echo "$PKG_PATH"
-
     # Determine the installer path.
     if [[ -e "$HERE/$PKG_NAME" ]] && [[ "$PKG_PATH" == "" ]]; then
         # If the --path flag is not passed assume the package is in the current working
         # directory.
+        printf "%s found in %s ...\n" "$PKG_NAME" "$HERE"
         PKG_PATH="$HERE/$PKG_NAME"
 
     elif [[ "$PKG_PATH" != "" ]] && [[ -e "$PKG_PATH/$PKG_NAME" ]]; then
-        printf "%s found at %s" "$PKG_NAME" "$PKG_PATH"
+        printf "%s found at %s\n" "$PKG_NAME" "$PKG_PATH"
         PKG_PATH="$PKG_PATH/$PKG_NAME"
+
+    elif [[ "$PKG_PATH" != "" ]] && [[ ! -e "$PKG_PATH/$PKG_NAME" ]]; then
+        printf "Error: %s not found at %s\n" "$PKG_NAME" "$PKG_PATH"
+        printf "       Please check the defined path ...\n"
+        exit 1
 
     else
         printf "Error: Unable to locate %s in the current working directory ...\n" "$PKG_NAME"
