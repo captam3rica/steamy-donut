@@ -28,7 +28,7 @@ arguments:
 
       --list-apps     See a list of apps available for internet download.
 
-      --get-apps      Download and install specified app from the internet. For example, to download and 
+      --get-app       Download and install specified app from the internet. For example, to download and 
                       install the latest version of Google Chrome use the following flag and app keyword: 
 
                           --get-app googlechrome
