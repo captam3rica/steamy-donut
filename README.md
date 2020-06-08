@@ -33,3 +33,11 @@ arguments:
 ### Older Package Version
 
 ![](images/steamydonut_older_pkg_version_demo.gif)
+
+
+##   TODO:
+
+- [✅] Turn this tool into a command line Utility
+    - Flags: --app-name, --app-version, --package-name, --verson, -h, --help
+- handle .dmg installs
+- Add builtin downloads for common apps
