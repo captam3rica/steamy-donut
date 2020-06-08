@@ -210,6 +210,7 @@ usage(){
 help_message() {
     # Print this tools help information
 
+    # Add usage output to help message
     echo "$(usage)"
     echo ""
     echo "Install packaged apps without accidently overwriting a newer version that may already be installed."
@@ -233,7 +234,7 @@ help_message() {
     echo "      --get-app       Download and install specified app from the internet. For example, to download and "
     echo "                      install the latest version of Google Chrome use the following flag and app keyword: "
     echo ""
-    echo "                          --get-app googlechrome"
+    echo "                          $SCRIPT_NAME --get-app googlechrome"
     echo ""
     echo "      --version       Print current version of $SCRIPT_NAME"
     echo ""
@@ -273,10 +274,12 @@ return_app_url() {
     # Return app url based on parameters passed.
     #
     # Args:
-    #   $1: App Name
+    #   $1: app_keyword
 
-    local app_name="$1"
+    local app_keyword="$1"
 
+    # Alot of these dowload links were pulled from the
+    # https://github.com/scriptingosx/Installomator project from scriptingosx :)
     case $app_name in
         googlechrome)
             name="Google Chrome"
@@ -290,10 +293,10 @@ return_app_url() {
             type="pkg"
             downloadURL="https://go.microsoft.com/fwlink/?linkid=830196"
             expectedTeamID="UBF8T346G9"
-            # commented the updatetool for MSAutoupdate, because when Autoupdate is really
-            # old or broken, you want to force a new install
-            #updateTool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
-            #updateToolArguments=( --install --apps MSau04 )
+            # commented the updatetool for MSAutoupdate, because when Autoupdate is
+            # really old or broken, you want to force a new install
+            # updateTool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
+            # updateToolArguments=( --install --apps MSau04 )
             ;;
 
         microsoftcompanyportal)
