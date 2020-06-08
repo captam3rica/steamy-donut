@@ -35,6 +35,131 @@ declare -a ARG_ARRAY
 ARG_ARRAY=("${@}")
 
 
+main() {
+    # Run the main logic
+
+    # Declare arrays that will hold version numbers.
+    declare -a pkg_vers_array
+    declare -a inst_vers_array
+
+    # Validate Args
+    # Don't forget that zsh array index start at 1 and not zero
+    for (( i = 1; i <= ${#ARG_ARRAY[@]}; i++ )); do
+
+        # Validate if no agrs given, -h, or --help are passed.
+        if [[ "${#ARG_ARRAY}" == 0 ]] || [[ "${ARG_ARRAY}" == "-h" ]] || \
+            [[ "${ARG_ARRAY}" == "--help" ]]; then
+            # Print this tool's help message
+            help_message
+        fi
+
+        if [[ "${ARG_ARRAY[$i]}" == "--app-name" ]]; then
+            APP_NAME="${ARG_ARRAY[$i+1]}"
+            # Make sure that an app name was passed.
+            if [[ "$APP_NAME" == "" ]]; then printf "Error: Please enter app name!\n"; usage; exit 1; fi
+        fi
+
+        if [[ "${ARG_ARRAY[$i]}" == "--app-version" ]]; then
+            APP_VERSION="$(/bin/echo ${ARG_ARRAY[$i+1]} | /usr/bin/sed 's/-/./g')"
+            if [[ "$APP_VERSION" == "" ]]; then printf "Error: Please enter app version!\n"; usage; exit 1; fi
+        fi
+
+        if [[ "${ARG_ARRAY[$i]}" == "--pkg-name" ]]; then
+            PKG_NAME="${ARG_ARRAY[$i+1]}"
+            if [[ "$PKG_NAME" == "" ]]; then printf "Error: Please enter package name!\n"; usage; exit 1; fi
+        fi
+
+        if [[ "${ARG_ARRAY[$i]}" == "--version" ]]; then; echo "$VERSION"; exit; fi
+
+    done
+
+    # Make sure that the required args are given
+    if [[ -z "$APP_NAME" ]] || [[ -z "$APP_VERSION" ]] || [[ -z "$PKG_NAME" ]] ; then
+        usage
+        printf "$SCRIPT_NAME: Error: The following arguments are required: --app-name, --app-version, --pkg-name\n"
+        exit 1
+    fi
+
+    printf "Checking to see if $APP_NAME is installed ...\n"
+    installed_version="$(return_current_app_version $APP_NAME)"
+
+    # See if the app is not installed.
+    if [ $installed_version = "None" ]; then
+        printf "The app is currently not installed ...\n"
+        printf "Installing the app for the first time ...\n"
+        install_package "$PKG_PATH" "/"
+
+        # If the set_default_preferences.sh script is present in the installer.
+        if [[ -f "$HERE/set_default_preferences.sh" ]]; then
+            printf "Setting default settings for %s.app ...\n" "$APP_NAME"
+            /bin/zsh "$HERE/set_default_preferences.sh"
+        fi
+
+    else
+
+        printf "%s is installed ...\n" "$APP_NAME"
+        printf "Packaged version: %s\n" "$APP_VERSION"
+        printf "Installed version: %s\n" "$installed_version"
+
+        # Loop over the packaged version and append version numbers to array.
+        # Splits the version number on the "."
+        # ${(@s/./)APP_VERSION}
+        for number in "${(@s/./)APP_VERSION}"; do
+            pkg_vers_array+=("$number")
+        done
+
+        # Loop over the installed version and append version numbers to array.
+        # Splits the version number on the "."
+        for number in "${(@s/./)installed_version}"; do
+            inst_vers_array+=("$number")
+        done
+
+        # Care version numbers lengths and return result.
+        vers_num_len_result="$(compare_version_number_lengths ${#pkg_vers_array[@]} ${#inst_vers_array[@]})"
+
+        if [[ "$vers_num_len_result" -eq 1 ]]; then
+            # Append zeros to installed version array so that it matches the length of
+            # the packaged version array length.
+            printf "Package version number is longer ...\n"
+            printf "Appending zeros to version ...\n"
+            for (( i = ${#inst_vers_array[@]}; i < ${#pkg_vers_array[@]}; i++ )); do
+                inst_vers_array+=(0)
+            done
+        fi
+
+        if [[ "$vers_num_len_result" -eq 2 ]]; then
+            #statements
+            printf "Package version number is shorter ...\n"
+            printf "Appending zeros to version ...\n"
+            for (( i = ${#pkg_vers_array[@]}; i < ${#inst_vers_array[@]}; i++ )); do
+                pkg_vers_array+=(0)
+            done
+        fi
+
+        # Compare the packaged version to the current installed version
+        comparison_result="$(compare_versions ${#pkg_vers_array[@]} ${#inst_vers_array[@]})"
+
+
+        if [[ "$comparison_result" == "OLDER" ]] || [[ "$comparison_result" == "EQUAL" ]]; then
+            # No need to install an older or equal version.
+            printf "Packaged version is "%s" ...\n" "$comparison_result"
+            printf "Skipping installation ...\n"
+            RESULT=1
+
+        else
+            printf "Installing %s ...\n" "$PKG"
+            install_package "$PKG_PATH" "/"
+
+            # If the set_default_preferences.sh script is present in the installer.
+            if [[ -f "$HERE/set_default_preferences.sh" ]]; then
+                printf "Setting default settings for %s.app ...\n" "$APP_NAME"
+                /bin/zsh "$HERE/set_default_preferences.sh"
+            fi
+        fi
+    fi
+}
+
+
 usage(){
     # Print this tools usage
     echo "usage: $SCRIPT_NAME [-h] --app-name --app-version --package-name [--version]"
@@ -194,129 +319,6 @@ install_package() {
     fi
 }
 
-main() {
-    # Run the main logic
-
-    # Declare arrays that will hold version numbers.
-    declare -a pkg_vers_array
-    declare -a inst_vers_array
-
-    # Validate Args
-    # Don't forget that zsh array index start at 1 and not zero
-    for (( i = 1; i <= ${#ARG_ARRAY[@]}; i++ )); do
-
-        # Validate if no agrs given, -h, or --help are passed.
-        if [[ "${#ARG_ARRAY}" == 0 ]] || [[ "${ARG_ARRAY}" == "-h" ]] || \
-            [[ "${ARG_ARRAY}" == "--help" ]]; then
-            # Print this tool's help message
-            help_message
-        fi
-
-        if [[ "${ARG_ARRAY[$i]}" == "--app-name" ]]; then
-            APP_NAME="${ARG_ARRAY[$i+1]}"
-            # Make sure that an app name was passed.
-            if [[ "$APP_NAME" == "" ]]; then printf "Error: Please enter app name!\n"; usage; exit 1; fi
-        fi
-
-        if [[ "${ARG_ARRAY[$i]}" == "--app-version" ]]; then
-            APP_VERSION="$(/bin/echo ${ARG_ARRAY[$i+1]} | /usr/bin/sed 's/-/./g')"
-            if [[ "$APP_VERSION" == "" ]]; then printf "Error: Please enter app version!\n"; usage; exit 1; fi
-        fi
-
-        if [[ "${ARG_ARRAY[$i]}" == "--pkg-name" ]]; then
-            PKG_NAME="${ARG_ARRAY[$i+1]}"
-            if [[ "$PKG_NAME" == "" ]]; then printf "Error: Please enter package name!\n"; usage; exit 1; fi
-        fi
-
-        if [[ "${ARG_ARRAY[$i]}" == "--version" ]]; then; echo "$VERSION"; exit; fi
-
-    done
-
-    # Make sure that the required args are given
-    if [[ -z "$APP_NAME" ]] || [[ -z "$APP_VERSION" ]] || [[ -z "$PKG_NAME" ]] ; then
-        usage
-        printf "$SCRIPT_NAME: Error: The following arguments are required: --app-name, --app-version, --pkg-name\n"
-        exit 1
-    fi
-
-    printf "Checking to see if $APP_NAME is installed ...\n"
-    installed_version="$(return_current_app_version $APP_NAME)"
-
-    # See if the app is not installed.
-    if [ $installed_version = "None" ]; then
-        printf "The app is currently not installed ...\n"
-        printf "Installing the app for the first time ...\n"
-        install_package "$PKG_PATH" "/"
-
-        # If the set_default_preferences.sh script is present in the installer.
-        if [[ -f "$HERE/set_default_preferences.sh" ]]; then
-            printf "Setting default settings for %s.app ...\n" "$APP_NAME"
-            /bin/zsh "$HERE/set_default_preferences.sh"
-        fi
-
-    else
-
-        printf "%s is installed ...\n" "$APP_NAME"
-        printf "Packaged version: %s\n" "$APP_VERSION"
-        printf "Installed version: %s\n" "$installed_version"
-
-        # Loop over the packaged version and append version numbers to array.
-        # Splits the version number on the "."
-        # ${(@s/./)APP_VERSION}
-        for number in "${(@s/./)APP_VERSION}"; do
-            pkg_vers_array+=("$number")
-        done
-
-        # Loop over the installed version and append version numbers to array.
-        # Splits the version number on the "."
-        for number in "${(@s/./)installed_version}"; do
-            inst_vers_array+=("$number")
-        done
-
-        # Care version numbers lengths and return result.
-        vers_num_len_result="$(compare_version_number_lengths ${#pkg_vers_array[@]} ${#inst_vers_array[@]})"
-
-        if [[ "$vers_num_len_result" -eq 1 ]]; then
-            # Append zeros to installed version array so that it matches the length of
-            # the packaged version array length.
-            printf "Package version number is longer ...\n"
-            printf "Appending zeros to version ...\n"
-            for (( i = ${#inst_vers_array[@]}; i < ${#pkg_vers_array[@]}; i++ )); do
-                inst_vers_array+=(0)
-            done
-        fi
-
-        if [[ "$vers_num_len_result" -eq 2 ]]; then
-            #statements
-            printf "Package version number is shorter ...\n"
-            printf "Appending zeros to version ...\n"
-            for (( i = ${#pkg_vers_array[@]}; i < ${#inst_vers_array[@]}; i++ )); do
-                pkg_vers_array+=(0)
-            done
-        fi
-
-        # Compare the packaged version to the current installed version
-        comparison_result="$(compare_versions ${#pkg_vers_array[@]} ${#inst_vers_array[@]})"
-
-
-        if [[ "$comparison_result" == "OLDER" ]] || [[ "$comparison_result" == "EQUAL" ]]; then
-            # No need to install an older or equal version.
-            printf "Packaged version is "%s" ...\n" "$comparison_result"
-            printf "Skipping installation ...\n"
-            RESULT=1
-
-        else
-            printf "Installing %s ...\n" "$PKG"
-            install_package "$PKG_PATH" "/"
-
-            # If the set_default_preferences.sh script is present in the installer.
-            if [[ -f "$HERE/set_default_preferences.sh" ]]; then
-                printf "Setting default settings for %s.app ...\n" "$APP_NAME"
-                /bin/zsh "$HERE/set_default_preferences.sh"
-            fi
-        fi
-    fi
-}
 
 # Call main
 main
