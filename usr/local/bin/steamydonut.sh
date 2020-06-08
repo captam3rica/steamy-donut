@@ -21,7 +21,7 @@
 ########################################################################################
 
 
-VERSION="1.1.0"
+VERSION="1.1.1"
 
 # Define the current working directory
 HERE=$(/usr/bin/dirname "$0")
