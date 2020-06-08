@@ -15,12 +15,23 @@ and this project adheres to Year Notation Versioning.
 - `Security` in case of vulnerabilities.
 
 
-## [v1.2.0] - 2020-06-05
+## [v0.3.0] - 2020-06-
+
+- **Added** - Ability to download popular apps directly from the internet.
+    - Google Chrome
+    - Microsoft Teams
+    - Microsoft Word
+    - Microsoft PPT
+    - Microsoft Excel
+    - Microsoft Outlook
+
+
+## [v0.2.0] - 2020-06-05
 
 - **Added** - `--path` option to allow users to define the path to the installer file. If a path is not specified the tool with check the current directory for the installer file or notify the user that the installer file cannot be found and that a path needs to be defined with the `--path` option.
 
 
-## [v1.1.1] - 2020-06-05
+## [v0.1.1] - 2020-06-05
 
 - **Changed** - Code refactoring.
 
