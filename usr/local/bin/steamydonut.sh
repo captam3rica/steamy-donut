@@ -12,20 +12,11 @@
 #       - Determine if the app is already installed. If not installed then the script
 #         will run a fresh installation of the app.
 #       - Determine the verion of the currently installed app.
-#       - Verify that the length of the version numbers are equal and find the
+#       - Verify that the length of the version numbers are equal, find the
 #         differnce and append that number of zeros to the shorter version number.
 #       - Compare the current installed version to the packaged app version. The
 #         packaged version will only be installed if it is newer than the currently
 #         installed version.
-#
-########################################################################################
-#
-#   TODO:
-#
-#       - [✅] Turn this tool into a command line Utility
-#           - Flags: --app-name, --app-version, --package-name, --verson, -h, --help
-#       - handle .dmg installs
-#       - Add builtin downloads for common apps
 #
 ########################################################################################
 
@@ -210,19 +201,19 @@ main() {
     declare -a pkg_vers_array
     declare -a inst_vers_array
 
-    # Validate Arguments
-    if [[ "${#ARG_ARRAY}" == 0 ]] || [[ "${ARG_ARRAY}" == "-h" ]] || \
-        [[ "${ARG_ARRAY}" == "--help" ]]; then
-        # Print this tool's help message
-        help_message
-    fi
-
-    # Validate the rest of the arguments
+    # Validate Args
+    # Don't forget that zsh array index start at 1 and not zero
     for (( i = 1; i <= ${#ARG_ARRAY[@]}; i++ )); do
+
+        # Validate if no agrs given, -h, or --help are passed.
+        if [[ "${#ARG_ARRAY}" == 0 ]] || [[ "${ARG_ARRAY}" == "-h" ]] || \
+            [[ "${ARG_ARRAY}" == "--help" ]]; then
+            # Print this tool's help message
+            help_message
+        fi
 
         if [[ "${ARG_ARRAY[$i]}" == "--app-name" ]]; then
             APP_NAME="${ARG_ARRAY[$i+1]}"
-
             # Make sure that an app name was passed.
             if [[ "$APP_NAME" == "" ]]; then printf "Error: Please enter app name!\n"; usage; exit 1; fi
         fi
@@ -237,9 +228,7 @@ main() {
             if [[ "$PKG_NAME" == "" ]]; then printf "Error: Please enter package name!\n"; usage; exit 1; fi
         fi
 
-        if [[ "${ARG_ARRAY[$i]}" == "--version" ]]; then
-            echo "$VERSION"
-        fi
+        if [[ "${ARG_ARRAY[$i]}" == "--version" ]]; then; echo "$VERSION"; fi
 
     done
 
