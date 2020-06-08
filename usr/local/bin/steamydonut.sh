@@ -21,7 +21,7 @@
 ########################################################################################
 
 
-VERSION="1.2.0"
+VERSION="0.2.1"
 
 # Define this scripts current working directory
 SCRIPT_DIR=$(/usr/bin/dirname "$0")
@@ -75,6 +75,16 @@ main() {
         if [[ "${ARG_ARRAY[$i]}" == "--path" ]]; then
             PKG_PATH="${ARG_ARRAY[$i+1]}"
             if [[ "$PKG_PATH" == "" ]]; then printf "Error: Please enter package path!\n"; usage; exit 1; fi
+        fi
+
+        if [[ "${ARG_ARRAY[$i]}" == "--list-apps" ]]; then
+            available_internet_downlowds
+            exit 0
+        fi
+
+        if [[ "${ARG_ARRAY[$i]}" == "--get-app" ]]; then
+            # Download the specified app from the internet.
+            exit 0
         fi
 
         if [[ "${ARG_ARRAY[$i]}" == "--version" ]]; then; echo "$VERSION"; exit; fi
@@ -193,36 +203,216 @@ main() {
 
 usage(){
     # Print this tools usage
-    echo "usage: $SCRIPT_NAME [-h] --app-name --app-version --pkg-name [--path] [--version]"
+    echo "usage: $SCRIPT_NAME [-h] --app-name <\"app_name\"> --app-version <version> --pkg-name <\"package_name\"> [--path <full_path>] [--list-apps] [--get-app <keyword>] [--version]"
 }
 
 
 help_message() {
     # Print this tools help information
 
-    echo "usage: $SCRIPT_NAME [-h] --app-name --app-version --package-name [--version]"
+    echo "$(usage)"
     echo ""
     echo "Install packaged apps without accidently overwriting a newer version that may already be installed."
     echo ""
     echo "arguments:"
-    echo "    --app-name        Application name. This should be how the app name appears in the /Applications "
+    echo "      --app-name      Application name. This should be how the app name appears in the /Applications "
     echo "                      folder or wherever the app is installed. If the app name contains spaces make "
     echo "                      sure to it in double quotes (\"\")."
     echo "                      Examples: \"Microsoft Teams.app\", Atom.app, or \"Google Chrome.app\""
     echo ""
-    echo "    --app-version     Version of app being installed. The version number should be of the format X.X.X.X."
+    echo "      --app-version   Version of app being installed. The version number should be of the format X.X.X.X."
     echo "                      Examples: 1 or 1.1 or 1.1.1-1"
     echo ""
-    echo "    --pkg-name        Name of package installer (your-installer.pkg)."
+    echo "      --pkg-name      Name of package installer (your-installer.pkg)."
     echo ""
-    echo "    --path            Path to installer. If a path is not provided it is assumed that the installer file "
+    echo "      --path          Path to installer. If a path is not provided it is assumed that the installer file "
     echo "                      is in the current working directory."
     echo ""
-    echo "    --version         Print current version of $SCRIPT_NAME"
+    echo "      --list-apps     See a list of apps avaialbe for internet download."
     echo ""
-    echo "    -h, --help        Print this help message."
+    echo "      --get-apps      Download and install specified app from the internet. For example, to download and "
+    echo "                      install the latest version of Google Chrome use the following flag and app keyword: "
+    echo ""
+    echo "                          --get-app googlechrome"
+    echo ""
+    echo "      --version       Print current version of $SCRIPT_NAME"
+    echo ""
+    echo "      -h, --help      Print this help message."
     echo ""
     exit
+}
+
+
+available_internet_downlowds() {
+    # Return a list of available internet downloads.
+    echo ""
+    echo "available internet downloads:"
+    echo ""
+    echo "      App:                        Keyword:"
+    echo "      ----------------------------------------------------------"
+    echo "      Google Chrome               googlechrome"
+    echo "      Microsoft AutoUpdate        microsoftautoupdate"
+    echo "      Microsoft Company Portal    microsoftcompanyportal"
+    echo "      Microsoft Defender ATP      microsoftdefenderatp"
+    echo "      Microsoft Edge              microsoftedgeenterprisestable"
+    echo "      Microsoft Excel             microsoftexcel"
+    echo "      Microsoft OneDrive          microsoftonedrive"
+    echo "      Microsoft OneNote           microsoftonenote"
+    echo "      Microsoft Outlook           microsoftoutlook"
+    echo "      Microsoft PPT               microsoftpowerpoint"
+    echo "      Microsoft Remote Desktop    microsoftremotedesktop"
+    echo "      Microsoft SharePointPlugin  microsoftsharepointplugin"
+    echo "      Microsoft Teams             microsoftteams"
+    echo "      Microsoft Word              microsoftword"
+    echo "      Visual Studio Code          visualstudiocode"
+    echo ""
+}
+
+
+return_app_url() {
+    # Return app url based on parameters passed.
+    #
+    # Args:
+    #   $1: App Name
+
+    local app_name="$1"
+
+    case $app_name in
+        googlechrome)
+            name="Google Chrome"
+            type="dmg"
+            url="https://dl.google.com/chrome/mac/stable/GGRO/googlechrome.dmg"
+            expectedTeamID="EQHXZ8M8AV"
+            ;;
+
+        microsoftautoupdate)
+            name="Microsoft AutoUpdate"
+            type="pkg"
+            downloadURL="https://go.microsoft.com/fwlink/?linkid=830196"
+            expectedTeamID="UBF8T346G9"
+            # commented the updatetool for MSAutoupdate, because when Autoupdate is really
+            # old or broken, you want to force a new install
+            #updateTool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
+            #updateToolArguments=( --install --apps MSau04 )
+            ;;
+
+        microsoftcompanyportal)
+            name="Company Portal"
+            type="pkg"
+            downloadURL="https://go.microsoft.com/fwlink/?linkid=869655"
+            expectedTeamID="UBF8T346G9"
+            updateTool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
+            updateToolArguments=( --install --apps IMCP01 )
+            ;;
+
+        microsoftdefenderatp)
+            name="Microsoft Defender ATP"
+            type="pkg"
+            downloadURL="https://go.microsoft.com/fwlink/?linkid=2097502"
+            expectedTeamID="UBF8T346G9"
+            updateTool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
+            updateToolArguments=( --install --apps WDAV00 )
+            ;;
+
+        microsoftedgeenterprisestable)
+            name="Microsoft Edge"
+            type="pkg"
+            downloadURL="https://go.microsoft.com/fwlink/?linkid=2093438"
+            expectedTeamID="UBF8T346G9"
+            updateTool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
+            updateToolArguments=( --install --apps EDGE01 )
+            ;;
+
+        microsoftexcel)
+            name="Microsoft Excel"
+            type="pkg"
+            downloadURL="https://go.microsoft.com/fwlink/?linkid=525135"
+            expectedTeamID="UBF8T346G9"
+            updateTool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
+            updateToolArguments=( --install --apps XCEL2019 )
+            ;;
+
+        microsoftonedrive)
+            name="OneDrive"
+            type="pkg"
+            downloadURL="https://go.microsoft.com/fwlink/?linkid=823060"
+            expectedTeamID="UBF8T346G9"
+            updateTool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
+            updateToolArguments=( --install --apps ONDR18 )
+            ;;
+
+        microsoftonenote)
+            name="Microsoft OneNote"
+            type="pkg"
+            downloadURL="https://go.microsoft.com/fwlink/?linkid=820886"
+            expectedTeamID="UBF8T346G9"
+            updateTool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
+            updateToolArguments=( --install --apps ONMC2019 )
+            ;;
+
+        microsoftoutlook)
+            name="Microsoft Outlook"
+            type="pkg"
+            downloadURL="https://go.microsoft.com/fwlink/?linkid=525137"
+            expectedTeamID="UBF8T346G9"
+            updateTool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
+            updateToolArguments=( --install --apps OPIM2019 )
+            ;;
+
+        microsoftpowerpoint)
+            name="Microsoft PowerPoint"
+            type="pkg"
+            downloadURL="https://go.microsoft.com/fwlink/?linkid=525136"
+            expectedTeamID="UBF8T346G9"
+            updateTool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
+            updateToolArguments=( --install --apps PPT32019 )
+            ;;
+
+        microsoftremotedesktop)
+            name="Microsoft Remote Desktop"
+            type="pkg"
+            downloadURL="https://go.microsoft.com/fwlink/?linkid=868963"
+            expectedTeamID="UBF8T346G9"
+            updateTool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
+            updateToolArguments=( --install --apps MSRD10 )
+            ;;
+
+        microsoftsharepointplugin)
+            name="MicrosoftSharePointPlugin"
+            type="pkg"
+            downloadURL="https://go.microsoft.com/fwlink/?linkid=800050"
+            expectedTeamID="UBF8T346G9"
+            # TODO: determine blockingProcesses for SharePointPlugin
+            ;;
+
+        microsoftteams)
+            name="Microsoft Teams"
+            type="pkg"
+            downloadURL="https://go.microsoft.com/fwlink/?linkid=869428"
+            expectedTeamID="UBF8T346G9"
+            blockingProcesses=( Teams "Microsoft Teams Helper" )
+            updateTool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
+            updateToolArguments=( --install --apps TEAM01 )
+            ;;
+
+        microsoftword)
+            name="Microsoft Word"
+            type="pkg"
+            downloadURL="https://go.microsoft.com/fwlink/?linkid=525134"
+            expectedTeamID="UBF8T346G9"
+            updateTool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
+            updateToolArguments=( --install --apps MSWD2019 )
+            ;;
+
+        visualstudiocode)
+            name="Visual Studio Code"
+            type="zip"
+            downloadURL="https://go.microsoft.com/fwlink/?LinkID=620882"
+            expectedTeamID="UBF8T346G9"
+            appName="Visual Studio Code.app"
+            blockingProcesses=( Electron )
+            ;;
+    esac
 }
 
 
@@ -253,6 +443,71 @@ return_current_app_version() {
     fi
 
     printf "%s" "$installed_version"
+}
+
+
+get_latest_downloadable_version() {
+    # Return the latest app version
+
+    os_version="$1"
+
+    ## Set the User Agent string for use with curl
+	user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X $os_version) AppleWebKit/535.6.2 (KHTML, like Gecko) Version/5.2 Safari/535.6.2"
+
+    lv=$(/usr/bin/curl -s -A "$user_agent" https://www.mozilla.org/$LANG/firefox/new/ | grep 'data-latest-firefox' | sed -e 's/.* data-latest-firefox="\(.*\)".*/\1/' -e 's/\"//' | /usr/bin/awk '{print $1}')
+
+    # Return the latest version
+    printf "%s\n" "$lv"
+}
+
+
+verify_installer_team_id() {
+    # Verify the Team ID associated with the installation media.
+    #
+    # Args:
+    #   $1: The path to the install media.
+    installer_path="$1"
+
+    verified=False
+
+    if [[ "$(/usr/bin/basename $installer_path | /usr/bin/awk -F '.' '{print $NF}')" == "pkg" ]]; then
+        # Validate a .pkg
+
+        received_team_id="$(/usr/sbin/spctl -a -vv -t install $installer_path 2>&1 | \
+            /usr/bin/awk '/origin=/ {print $NF}' | /usr/bin/tr -d '()')"
+        ret="$?"
+
+        # Make sure that we didn't receive an error from spctl
+        if [[ "$ret" -ne 0 ]]; then
+            printf "Error validating $installer_path ...\n"
+            printf "Exiting installer ...\n"
+            exit "$ret"
+        fi
+
+    else
+        # Validate a .app
+        received_team_id="$(/usr/sbin/spctl -a -vv $installer_path 2>&1 | \
+            /usr/bin/awk '/origin=/ {print $NF}' | /usr/bin/tr -d '()')"
+        ret="$?"
+
+        # Make sure that we didn't receive an error from spctl
+        if [[ "$ret" -ne 0 ]]; then
+            printf "Error validating $installer_path ...\n"
+            printf "Exiting installer ...\n"
+            exit "$ret"
+        fi
+
+    fi
+
+    # Check to see if the Team IDs are not equal
+    if [[ "$received_team_id" == "$EXPECTED_TEAM_ID" ]]; then
+        verified=True
+    else
+        verified=False
+    fi
+
+    # Return verified
+    printf "$verified\n"
 }
 
 

@@ -10,7 +10,7 @@ Easily install packaged apps without installing over a newer version. This proje
 ```
 usage: steamydonut.sh [-h] --app-name --app-version --package-name [--version]
 
-Install packaged apps without accidently overwriting a newer version that may already be installed.
+Install packaged apps without accidentally overwriting a newer version that may already be installed.
 
 arguments:
       --app-name      Application name. This should be how the app name appears in the /Applications 
@@ -26,7 +26,7 @@ arguments:
       --path          Path to installer. If a path is not provided it is assumed that the installer file 
                       is in the current working directory.
 
-      --list-apps     See a list of apps avaialbe form the internet.
+      --list-apps     See a list of apps available for internet download.
 
       --get-apps      Download and install specified app from the internet. For example, to download and 
                       install the latest version of Google Chrome use the following flag and app keyword: 
