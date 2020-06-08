@@ -21,7 +21,7 @@
 ########################################################################################
 
 
-VERSION="1.1.1"
+VERSION="1.2.0"
 
 # Define the current working directory
 HERE=$(/usr/bin/dirname "$0")
@@ -69,6 +69,11 @@ main() {
             if [[ "$PKG_NAME" == "" ]]; then printf "Error: Please enter package name!\n"; usage; exit 1; fi
         fi
 
+        if [[ "${ARG_ARRAY[$i]}" == "--path" ]]; then
+            PKG_PATH="${ARG_ARRAY[$i+1]}"
+            if [[ "$PKG_PATH" == "" ]]; then printf "Error: Please enter package path!\n"; usage; exit 1; fi
+        fi
+
         if [[ "${ARG_ARRAY[$i]}" == "--version" ]]; then; echo "$VERSION"; exit; fi
 
     done
@@ -77,6 +82,25 @@ main() {
     if [[ -z "$APP_NAME" ]] || [[ -z "$APP_VERSION" ]] || [[ -z "$PKG_NAME" ]] ; then
         usage
         printf "$SCRIPT_NAME: Error: The following arguments are required: --app-name, --app-version, --pkg-name\n"
+        exit 1
+    fi
+
+    echo "$PKG_PATH"
+
+    # Determine the installer path.
+    if [[ -e "$HERE/$PKG_NAME" ]] && [[ "$PKG_PATH" == "" ]]; then
+        # If the --path flag is not passed assume the package is in the current working
+        # directory.
+        PKG_PATH="$HERE/$PKG_NAME"
+
+    elif [[ "$PKG_PATH" != "" ]] && [[ -e "$PKG_PATH/$PKG_NAME" ]]; then
+        printf "%s found at %s" "$PKG_NAME" "$PKG_PATH"
+        PKG_PATH="$PKG_PATH/$PKG_NAME"
+
+    else
+        printf "Error: Unable to locate %s in the current working directory ...\n" "$PKG_NAME"
+        printf "       Please define a path to the package useing the --path flag.\n"
+        usage
         exit 1
     fi
 
@@ -137,12 +161,12 @@ main() {
         fi
 
         # Compare the packaged version to the current installed version
-        comparison_result="$(compare_versions ${#pkg_vers_array[@]} ${#inst_vers_array[@]})"
+        version_comparison="$(compare_versions ${#pkg_vers_array[@]} ${#inst_vers_array[@]})"
 
-
-        if [[ "$comparison_result" == "OLDER" ]] || [[ "$comparison_result" == "EQUAL" ]]; then
+        # See if the packaged version is OLDER than or EQUAL to the installed version.
+        if [[ "$version_comparison" == "OLDER" ]] || [[ "$version_comparison" == "EQUAL" ]]; then
             # No need to install an older or equal version.
-            printf "Packaged version is "%s" ...\n" "$comparison_result"
+            printf "Packaged version is "%s" ...\n" "$version_comparison"
             printf "Skipping installation ...\n"
             RESULT=1
 
@@ -162,7 +186,7 @@ main() {
 
 usage(){
     # Print this tools usage
-    echo "usage: $SCRIPT_NAME [-h] --app-name --app-version --package-name [--version]"
+    echo "usage: $SCRIPT_NAME [-h] --app-name --app-version --pkg-name [--path] [--version]"
 }
 
 
@@ -174,14 +198,18 @@ help_message() {
     echo "Install packaged apps without accidently overwriting a newer version that may already be installed."
     echo ""
     echo "arguments:"
-    echo "    --app-name        Application name. This should be how the app name appears in the /Applications folder or"
-    echo "                      wherever the app is installed. If the app name contains spaces make sure to it in double quotes (\"\")."
+    echo "    --app-name        Application name. This should be how the app name appears in the /Applications "
+    echo "                      folder or wherever the app is installed. If the app name contains spaces make "
+    echo "                      sure to it in double quotes (\"\")."
     echo "                      Examples: \"Microsoft Teams.app\", Atom.app, or \"Google Chrome.app\""
     echo ""
     echo "    --app-version     Version of app being installed. The version number should be of the format X.X.X.X."
     echo "                      Examples: 1 or 1.1 or 1.1.1-1"
     echo ""
     echo "    --pkg-name        Name of package installer (your-installer.pkg)."
+    echo ""
+    echo "    --path            Path to installer. If a path is not provided it is assumed that the installer file "
+    echo "                      is in the current working directory."
     echo ""
     echo "    --version         Print current version of $SCRIPT_NAME"
     echo ""
