@@ -228,7 +228,7 @@ main() {
             if [[ "$PKG_NAME" == "" ]]; then printf "Error: Please enter package name!\n"; usage; exit 1; fi
         fi
 
-        if [[ "${ARG_ARRAY[$i]}" == "--version" ]]; then; echo "$VERSION"; fi
+        if [[ "${ARG_ARRAY[$i]}" == "--version" ]]; then; echo "$VERSION"; exit; fi
 
     done
 
