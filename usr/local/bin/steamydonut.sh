@@ -230,7 +230,7 @@ help_message() {
     echo ""
     echo "      --list-apps     See a list of apps avaialbe for internet download."
     echo ""
-    echo "      --get-apps      Download and install specified app from the internet. For example, to download and "
+    echo "      --get-app       Download and install specified app from the internet. For example, to download and "
     echo "                      install the latest version of Google Chrome use the following flag and app keyword: "
     echo ""
     echo "                          --get-app googlechrome"
