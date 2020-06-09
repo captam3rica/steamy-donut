@@ -5,10 +5,13 @@
 ![](https://img.shields.io/badge/syntax-bashisms-blue)&nbsp;
 ![](https://img.shields.io/badge/macOS-10.14%2B-success)&nbsp;
 
-Easily install packaged apps without installing over a newer version. This project will start with installing `.pkg` installers, but will grow to handle `.dmg` and other methods of installing macOS apps.
+<p align=center>
+<b>NOTE</b>: THE CONTENTS OF THIS REPO ARE A WORK IN PROGRESS ... PLEASE TEST IN YOUR ENVIRONMENT BEFORE PUTTING INTO PRODUCTION AND FEEDBACK IS APPRECIATED ☺️
+</p>
 
-**NOTE**: THE CONTENTS OF THIS REPO ARE A WORK IN PROGRESS ...
+Easily install packaged apps without installing over a newer version. Download and install software that is available directly from the internet. (Examples: Google Chrome Browser, FireFox, Microsoft Office Suite)
 
+This project will start with installing local `.pkg` installers, but will grow to handle `.dmg` bundled installers, direct internet downloads, and other methods of installing macOS apps.
 
 ## Usage
 
