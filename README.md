@@ -16,9 +16,9 @@ This project will start with installing local `.pkg` installers, but will grow t
 ## Usage
 
 ```
-usage: steamydonut.sh [-h] --app-name <"app_name"> --app-version <version> --pkg-name <"package_name"> [--path <full_path>] [--list-apps] [--get-app <keyword>] [--version]
+usage: steamydonut.zsh [-h] --app-name <"app_name"> --app-version <version> --pkg-name <"package_name"> [--path <full_path>] [--list-donuts] [--get-donut <keyword>] [--version]
 
-Install packaged apps without accidently overwriting a newer version that may already be installed.
+Install packaged apps without accidentally overwriting a newer version that may already be installed.
 
 arguments:
       --app-name      Application name. This should be how the app name appears in the /Applications 
@@ -34,14 +34,14 @@ arguments:
       --path          Path to installer. If a path is not provided it is assumed that the installer file 
                       is in the current working directory.
 
-      --list-apps     See a list of apps avaialbe for internet download.
+      --list-donuts   See a list of apps available for internet download.
 
-      --get-app       Download and install specified app from the internet. For example, to download and 
+      --get-donut     Download and install specified app from the internet. For example, to download and 
                       install the latest version of Google Chrome use the following flag and app keyword: 
 
-                          steamydonut.sh --get-app googlechrome
+                          steamydonut.zsh --get-donut googlechrome
 
-      --version       Print current version of steamydonut.sh
+      --version       Print current version of steamydonut.zsh
 
       -h, --help      Print this help message.
 ```
