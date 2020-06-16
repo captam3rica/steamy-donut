@@ -32,10 +32,10 @@ HERE="$(pwd)"
 # Script name
 SCRIPT_NAME="$(/usr/bin/basename $0)"
 
-declare -a ARG_ARRAY
+declare -a ARGS_ARRAY
 
 # Contains all arguments passed
-ARG_ARRAY=("${@}")
+ARGS_ARRAY=("${@}")
 
 
 main() {
@@ -47,47 +47,47 @@ main() {
 
     # Validate Args
     # Don't forget that zsh array index start at 1 and not zero
-    for (( i = 1; i <= ${#ARG_ARRAY[@]}; i++ )); do
+    for (( i = 1; i <= ${#ARGS_ARRAY[@]}; i++ )); do
 
         # Validate if no agrs given, -h, or --help are passed.
-        if [[ "${#ARG_ARRAY}" == 0 ]] || [[ "${ARG_ARRAY}" == "-h" ]] || \
-            [[ "${ARG_ARRAY}" == "--help" ]]; then
+        if [[ "${#ARGS_ARRAY}" == 0 ]] || [[ "${ARGS_ARRAY}" == "-h" ]] || \
+            [[ "${ARGS_ARRAY}" == "--help" ]]; then
             # Print this tool's help message
             help_message
         fi
 
-        if [[ "${ARG_ARRAY[$i]}" == "--app-name" ]]; then
-            APP_NAME="${ARG_ARRAY[$i+1]}"
+        if [[ "${ARGS_ARRAY[$i]}" == "--app-name" ]]; then
+            APP_NAME="${ARGS_ARRAY[$i+1]}"
             # Make sure that an app name was passed.
             if [[ "$APP_NAME" == "" ]]; then printf "Error: Please enter app name!\n"; usage; exit 1; fi
         fi
 
-        if [[ "${ARG_ARRAY[$i]}" == "--app-version" ]]; then
-            APP_VERSION="$(/bin/echo ${ARG_ARRAY[$i+1]} | /usr/bin/sed 's/-/./g')"
+        if [[ "${ARGS_ARRAY[$i]}" == "--app-version" ]]; then
+            APP_VERSION="$(/bin/echo ${ARGS_ARRAY[$i+1]} | /usr/bin/sed 's/-/./g')"
             if [[ "$APP_VERSION" == "" ]]; then printf "Error: Please enter app version!\n"; usage; exit 1; fi
         fi
 
-        if [[ "${ARG_ARRAY[$i]}" == "--pkg-name" ]]; then
-            PKG_NAME="${ARG_ARRAY[$i+1]}"
+        if [[ "${ARGS_ARRAY[$i]}" == "--pkg-name" ]]; then
+            PKG_NAME="${ARGS_ARRAY[$i+1]}"
             if [[ "$PKG_NAME" == "" ]]; then printf "Error: Please enter package name!\n"; usage; exit 1; fi
         fi
 
-        if [[ "${ARG_ARRAY[$i]}" == "--path" ]]; then
-            PKG_PATH="${ARG_ARRAY[$i+1]}"
+        if [[ "${ARGS_ARRAY[$i]}" == "--path" ]]; then
+            PKG_PATH="${ARGS_ARRAY[$i+1]}"
             if [[ "$PKG_PATH" == "" ]]; then printf "Error: Please enter package path!\n"; usage; exit 1; fi
         fi
 
-        if [[ "${ARG_ARRAY[$i]}" == "--list-apps" ]]; then
+        if [[ "${ARGS_ARRAY[$i]}" == "--list-donuts" ]]; then
             available_internet_downlowds
             exit 0
         fi
 
-        if [[ "${ARG_ARRAY[$i]}" == "--get-app" ]]; then
+        if [[ "${ARGS_ARRAY[$i]}" == "--get-donut" ]]; then
             # Download the specified app from the internet.
             exit 0
         fi
 
-        if [[ "${ARG_ARRAY[$i]}" == "--version" ]]; then; echo "$VERSION"; exit; fi
+        if [[ "${ARGS_ARRAY[$i]}" == "--version" ]]; then; echo "$VERSION"; exit; fi
 
     done
 
@@ -203,7 +203,7 @@ main() {
 
 usage(){
     # Print this tools usage
-    echo "usage: $SCRIPT_NAME [-h] --app-name <\"app_name\"> --app-version <version> --pkg-name <\"package_name\"> [--path <full_path>] [--list-apps] [--get-app <keyword>] [--version]"
+    echo "usage: $SCRIPT_NAME [-h] --app-name <\"app_name\"> --app-version <version> --pkg-name <\"package_name\"> [--path <full_path>] [--list-donuts] [--get-donut <keyword>] [--version]"
 }
 
 
@@ -229,12 +229,12 @@ help_message() {
     echo "      --path          Path to installer. If a path is not provided it is assumed that the installer file "
     echo "                      is in the current working directory."
     echo ""
-    echo "      --list-apps     See a list of apps avaialbe for internet download."
+    echo "      --list-donuts   See a list of apps avaialbe for internet download."
     echo ""
-    echo "      --get-app       Download and install specified app from the internet. For example, to download and "
+    echo "      --get-donut     Download and install specified app from the internet. For example, to download and "
     echo "                      install the latest version of Google Chrome use the following flag and app keyword: "
     echo ""
-    echo "                          $SCRIPT_NAME --get-app googlechrome"
+    echo "                          $SCRIPT_NAME --get-donut googlechrome"
     echo ""
     echo "      --version       Print current version of $SCRIPT_NAME"
     echo ""
