@@ -54,6 +54,11 @@ arguments:
 ![](images/steamydonut_older_pkg_version_demo.gif)
 
 
+### List Donuts
+
+![](images/steamydonut_list_donuts.gif)
+
+
 ##   TODO:
 
 ✅ - Turn this tool into a command line Utility  
