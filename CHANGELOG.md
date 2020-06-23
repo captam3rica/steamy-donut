@@ -24,6 +24,9 @@ and this project adheres to Year Notation Versioning.
     - Microsoft PPT
     - Microsoft Excel
     - Microsoft Outlook
+- **Added** - Updated help page with examples for installing locally packaged apps
+- **Added** - Additional error handling when locally packaged app is being installed.
+- **Changed** - Refactored code in the main function so that it flows a bit better.
 
 
 ## [v0.2.0] - 2020-06-05

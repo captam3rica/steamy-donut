@@ -21,7 +21,8 @@
 ########################################################################################
 
 
-VERSION="0.2.1"
+VERSION="0.3.0"
+
 
 # Define this scripts current working directory
 SCRIPT_DIR=$(/usr/bin/dirname "$0")
@@ -47,34 +48,13 @@ main() {
 
     # Validate Args
     # Don't forget that zsh array index start at 1 and not zero
-    for (( i = 1; i <= ${#ARGS_ARRAY[@]}; i++ )); do
+    for (( i = 0; i <= ${#ARGS_ARRAY[@]}; i++ )); do
 
         # Validate if no agrs given, -h, or --help are passed.
-        if [[ "${#ARGS_ARRAY}" == 0 ]] || [[ "${ARGS_ARRAY}" == "-h" ]] || \
+        if [[ ${#ARGS_ARRAY[@]} -eq 0 ]] || [[ "${ARGS_ARRAY}" == "-h" ]] || \
             [[ "${ARGS_ARRAY}" == "--help" ]]; then
             # Print this tool's help message
             help_message
-        fi
-
-        if [[ "${ARGS_ARRAY[$i]}" == "--app-name" ]]; then
-            APP_NAME="${ARGS_ARRAY[$i+1]}"
-            # Make sure that an app name was passed.
-            if [[ "$APP_NAME" == "" ]]; then printf "Error: Please enter app name!\n"; usage; exit 1; fi
-        fi
-
-        if [[ "${ARGS_ARRAY[$i]}" == "--app-version" ]]; then
-            APP_VERSION="$(/bin/echo ${ARGS_ARRAY[$i+1]} | /usr/bin/sed 's/-/./g')"
-            if [[ "$APP_VERSION" == "" ]]; then printf "Error: Please enter app version!\n"; usage; exit 1; fi
-        fi
-
-        if [[ "${ARGS_ARRAY[$i]}" == "--pkg-name" ]]; then
-            PKG_NAME="${ARGS_ARRAY[$i+1]}"
-            if [[ "$PKG_NAME" == "" ]]; then printf "Error: Please enter package name!\n"; usage; exit 1; fi
-        fi
-
-        if [[ "${ARGS_ARRAY[$i]}" == "--path" ]]; then
-            PKG_PATH="${ARGS_ARRAY[$i+1]}"
-            if [[ "$PKG_PATH" == "" ]]; then printf "Error: Please enter package path!\n"; usage; exit 1; fi
         fi
 
         if [[ "${ARGS_ARRAY[$i]}" == "--list-donuts" ]]; then
@@ -83,69 +63,71 @@ main() {
         fi
 
         if [[ "${ARGS_ARRAY[$i]}" == "--get-donut" ]]; then
-            # Download the specified app from the internet.
-            exit 0
+            # Return the specified keyword.
+            donut="${ARGS_ARRAY[$i+1]}"
+            if [[ "$donut" == "" ]]; then printf "Error: Please enter app keyword!\n"; usage; exit 1; fi
         fi
 
         if [[ "${ARGS_ARRAY[$i]}" == "--version" ]]; then; echo "$VERSION"; exit; fi
 
     done
 
-    # Make sure that the required args are given
-    if [[ -z "$APP_NAME" ]] || [[ -z "$APP_VERSION" ]] || [[ -z "$PKG_NAME" ]] ; then
-        usage
-        printf "$SCRIPT_NAME: Error: The following arguments are required: --app-name, --app-version, --pkg-name\n"
-        exit 1
+    # Initialize some variables
+    local os_version="$(return_os_version)"
+    local current_user="$(get_current_user)"
+    local current_user_uid="$(get_current_user_uid $current_user)"
+
+
+    # Check to see if we are installing a application from the internet
+    if [[ "$donut" ]]; then
+
+        # Return the application information for the specified donut ...
+        return_app_download_info "$donut"
+
+        echo "$app_name"
+        echo "$type"
+        echo "$url"
+        echo "$expected_team_id"
+
+        if [[ "$blocking_processes" ]]; then
+            echo "$blocking_processes"
+        fi
+
+        if [[ "$update_tool" ]]; then
+            echo "$update_tool"
+        fi
     fi
 
-    # Determine the installer path.
-    if [[ -e "$HERE/$PKG_NAME" ]] && [[ "$PKG_PATH" == "" ]]; then
-        # If the --path flag is not passed assume the package is in the current working
-        # directory.
-        printf "%s found in %s ...\n" "$PKG_NAME" "$HERE"
-        PKG_PATH="$HERE/$PKG_NAME"
 
-    elif [[ "$PKG_PATH" != "" ]] && [[ -e "$PKG_PATH/$PKG_NAME" ]]; then
-        printf "%s found at %s\n" "$PKG_NAME" "$PKG_PATH"
-        PKG_PATH="$PKG_PATH/$PKG_NAME"
+    printf "Checking to see if $app_name is installed ...\n"
+    installed_version="$(return_installed_app_version $app_name)"
 
-    elif [[ "$PKG_PATH" != "" ]] && [[ ! -e "$PKG_PATH/$PKG_NAME" ]]; then
-        printf "Error: %s not found at %s\n" "$PKG_NAME" "$PKG_PATH"
-        printf "       Please check the defined path ...\n"
-        exit 1
+    echo "$installed_version"
 
-    else
-        printf "Error: Unable to locate %s in the current working directory ...\n" "$PKG_NAME"
-        printf "       Please define a path to the package useing the --path flag.\n"
-        usage
-        exit 1
-    fi
-
-    printf "Checking to see if $APP_NAME is installed ...\n"
-    installed_version="$(return_current_app_version $APP_NAME)"
+    exit 0
 
     # See if the app is not installed.
     if [ $installed_version = "None" ]; then
         printf "The app is currently not installed ...\n"
         printf "Installing the app for the first time ...\n"
-        install_package "$PKG_PATH" "/"
+        install_package "$pkg_path" "/"
 
         # If the set_default_preferences.sh script is present in the installer.
         if [[ -f "$HERE/set_default_preferences.sh" ]]; then
-            printf "Setting default settings for %s.app ...\n" "$APP_NAME"
+            printf "Setting default settings for %s.app ...\n" "$app_name"
             /bin/zsh "$HERE/set_default_preferences.sh"
         fi
 
     else
 
-        printf "%s is installed ...\n" "$APP_NAME"
-        printf "Packaged version: %s\n" "$APP_VERSION"
+        printf "%s is installed ...\n" "$app_name"
+        printf "Packaged version: %s\n" "$app_version"
         printf "Installed version: %s\n" "$installed_version"
 
         # Loop over the packaged version and append version numbers to array.
         # Splits the version number on the "."
-        # ${(@s/./)APP_VERSION}
-        for number in "${(@s/./)APP_VERSION}"; do
+        # ${(@s/./)app_version}
+        for number in "${(@s/./)app_version}"; do
             pkg_vers_array+=("$number")
         done
 
@@ -189,11 +171,11 @@ main() {
 
         else
             printf "Installing %s ...\n" "$PKG"
-            install_package "$PKG_PATH" "/"
+            install_package "$pkg_path" "/"
 
             # If the set_default_preferences.sh script is present in the installer.
             if [[ -f "$HERE/set_default_preferences.sh" ]]; then
-                printf "Setting default settings for %s.app ...\n" "$APP_NAME"
+                printf "Setting default settings for %s.app ...\n" "$app_name"
                 /bin/zsh "$HERE/set_default_preferences.sh"
             fi
         fi
@@ -203,7 +185,8 @@ main() {
 
 usage(){
     # Print this tools usage
-    echo "usage: $SCRIPT_NAME [-h] --app-name <\"app_name\"> --app-version <version> --pkg-name <\"package_name\"> [--path <full_path>] [--list-donuts] [--get-donut <keyword>] [--version]"
+    echo "usage: $SCRIPT_NAME [-h] --app-name <\"app_name\"> --app-version <version> --pkg-name <\"package_name\"> "
+    echo         "[--path <full_path>] [--list-donuts] [--get-donut <keyword>] [--version]"
 }
 
 
@@ -213,23 +196,11 @@ help_message() {
     # Add usage output to help message
     echo "$(usage)"
     echo ""
-    echo "Install packaged apps without accidently overwriting a newer version that may already be installed."
+    echo "Easily install locally packaged apps without installing over a newer version, or download and install publicly "
+    echo "avaialble apps directly from the internet."
     echo ""
     echo "arguments:"
-    echo "      --app-name      Application name. This should be how the app name appears in the /Applications "
-    echo "                      folder or wherever the app is installed. If the app name contains spaces make "
-    echo "                      sure to it in double quotes (\"\")."
-    echo "                      Examples: \"Microsoft Teams.app\", Atom.app, or \"Google Chrome.app\""
-    echo ""
-    echo "      --app-version   Version of app being installed. The version number should be of the format X.X.X.X."
-    echo "                      Examples: 1 or 1.1 or 1.1.1-1"
-    echo ""
-    echo "      --pkg-name      Name of package installer (your-installer.pkg)."
-    echo ""
-    echo "      --path          Path to installer. If a path is not provided it is assumed that the installer file "
-    echo "                      is in the current working directory."
-    echo ""
-    echo "      --list-donuts   See a list of apps avaialbe for internet download."
+    echo "      --list-donuts   See a list of apps available for internet download."
     echo ""
     echo "      --get-donut     Download and install specified app from the internet. For example, to download and "
     echo "                      install the latest version of Google Chrome use the following flag and app keyword: "
@@ -239,6 +210,8 @@ help_message() {
     echo "      --version       Print current version of $SCRIPT_NAME"
     echo ""
     echo "      -h, --help      Print this help message."
+    echo ""
+    echo "examples:"
     echo ""
     exit
 }
@@ -251,6 +224,7 @@ available_internet_downlowds() {
     echo ""
     echo "      App:                        Keyword:"
     echo "      ----------------------------------------------------------"
+    # echo "      Adobe Reader DC             adobereaderdc"
     echo "      Google Chrome               googlechrome"
     echo "      Microsoft AutoUpdate        microsoftautoupdate"
     echo "      Microsoft Company Portal    microsoftcompanyportal"
@@ -270,8 +244,77 @@ available_internet_downlowds() {
 }
 
 
-return_app_url() {
-    # Return app url based on parameters passed.
+logging() {
+    # Pe-pend text and print to standard output
+    # Takes in a log level and log string.
+    # Example: logging "INFO" "Something describing what happened."
+
+    log_level=$(printf "$1" | /usr/bin/tr '[:lower:]' '[:upper:]')
+    log_statement="$2"
+    LOG_FILE="$SCRIPT_NAME""_log-$(date +"%Y-%m-%d").log"
+    LOG_PATH="$ROOT_LIB/Logs/$LOG_FILE"
+
+    if [ -z "$log_level" ]; then
+        # If the first builtin is an empty string set it to log level INFO
+        log_level="INFO"
+    fi
+
+    if [ -z "$log_statement" ]; then
+        # The statement was piped to the log function from another command.
+        log_statement=""
+    fi
+
+    DATE=$(date +"[%b %d, %Y %Z %T $log_level]:")
+    printf "%s %s\n" "$DATE" "$log_statement" >> "$LOG_PATH"
+}
+
+
+return_os_version() {
+    # Return the OS Version with "_" instead of "."
+    /usr/bin/sw_vers -productVersion | sed 's/[.]/_/g'
+}
+
+
+get_current_user() {
+    # Grab current logged in user
+    printf '%s' "show State:/Users/ConsoleUser" | \
+        /usr/sbin/scutil | \
+        /usr/bin/awk '/Name :/ && ! /loginwindow/ {print $3}'
+}
+
+
+get_current_user_uid() {
+    # Check to see if the current console user uid is greater than 501
+    # Loop until either the 501 or 502 user is found.
+
+    # Get the current console user again
+    current_user="$1"
+
+    CURRENT_USER_UID=$(/usr/bin/dscl . -list /Users UniqueID | \
+        /usr/bin/grep "$current_user" | \
+        /usr/bin/awk '{print $2}' | \
+        /usr/bin/sed -e 's/^[ \t]*//')
+
+    while [ $CURRENT_USER_UID -lt 501 ]; do
+        logging "" "Current user is not logged in ... WAITING"
+        /bin/sleep 1
+
+        # Get the current console user again
+        current_user="$(get_current_user)"
+        CURRENT_USER_UID=$(/usr/bin/dscl . -list /Users UniqueID | \
+            /usr/bin/grep "$current_user" | \
+            /usr/bin/awk '{print $2}' | \
+            /usr/bin/sed -e 's/^[ \t]*//')
+        if [ $CURRENT_USER_UID -lt 501 ]; then
+            logging "" "Current user: $current_user with UID ..."
+        fi
+    done
+    printf "%s\n" "$CURRENT_USER_UID"
+}
+
+
+return_app_download_info() {
+    # Return app info based on keyword passed.
     #
     # Args:
     #   $1: app_keyword
@@ -280,146 +323,153 @@ return_app_url() {
 
     # Alot of these dowload links were pulled from the
     # https://github.com/scriptingosx/Installomator project from scriptingosx :)
-    case $app_name in
+    case $app_keyword in
+        adobereaderdc)
+            app_name="Adobe Reader DC.app"
+            type="dmg"
+            url="https://get.adobe.com/reader/download/?installer=Reader_DC_2020.009.20063_for_Mac_Intel&stype=7601&standalone=1"
+            expected_team_id="EQHXZ8M8AV"
+            ;;
+
         googlechrome)
-            name="Google Chrome"
+            app_name="Google Chrome.app"
             type="dmg"
             url="https://dl.google.com/chrome/mac/stable/GGRO/googlechrome.dmg"
-            expectedTeamID="EQHXZ8M8AV"
+            expected_team_id="EQHXZ8M8AV"
             ;;
 
         microsoftautoupdate)
-            name="Microsoft AutoUpdate"
+            app_name="Microsoft AutoUpdate.app"
             type="pkg"
-            downloadURL="https://go.microsoft.com/fwlink/?linkid=830196"
-            expectedTeamID="UBF8T346G9"
-            # commented the updatetool for MSAutoupdate, because when Autoupdate is
+            url="https://go.microsoft.com/fwlink/?linkid=830196"
+            expected_team_id="UBF8T346G9"
+            # commented the update_tool for MSAutoupdate, because when Autoupdate is
             # really old or broken, you want to force a new install
-            # updateTool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
-            # updateToolArguments=( --install --apps MSau04 )
+            # update_tool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
+            # update_toolArguments=( --install --apps MSau04 )
             ;;
 
         microsoftcompanyportal)
-            name="Company Portal"
+            app_name="Company Portal.app"
             type="pkg"
-            downloadURL="https://go.microsoft.com/fwlink/?linkid=869655"
-            expectedTeamID="UBF8T346G9"
-            updateTool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
-            updateToolArguments=( --install --apps IMCP01 )
+            url="https://go.microsoft.com/fwlink/?linkid=869655"
+            expected_team_id="UBF8T346G9"
+            update_tool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
+            update_toolArguments=( --install --apps IMCP01 )
             ;;
 
         microsoftdefenderatp)
-            name="Microsoft Defender ATP"
+            app_name="Microsoft Defender ATP.app"
             type="pkg"
-            downloadURL="https://go.microsoft.com/fwlink/?linkid=2097502"
-            expectedTeamID="UBF8T346G9"
-            updateTool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
-            updateToolArguments=( --install --apps WDAV00 )
+            url="https://go.microsoft.com/fwlink/?linkid=2097502"
+            expected_team_id="UBF8T346G9"
+            update_tool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
+            update_toolArguments=( --install --apps WDAV00 )
             ;;
 
         microsoftedgeenterprisestable)
-            name="Microsoft Edge"
+            app_name="Microsoft Edge.app"
             type="pkg"
-            downloadURL="https://go.microsoft.com/fwlink/?linkid=2093438"
-            expectedTeamID="UBF8T346G9"
-            updateTool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
-            updateToolArguments=( --install --apps EDGE01 )
+            url="https://go.microsoft.com/fwlink/?linkid=2093438"
+            expected_team_id="UBF8T346G9"
+            update_tool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
+            update_toolArguments=( --install --apps EDGE01 )
             ;;
 
         microsoftexcel)
-            name="Microsoft Excel"
+            app_name="Microsoft Excel.app"
             type="pkg"
-            downloadURL="https://go.microsoft.com/fwlink/?linkid=525135"
-            expectedTeamID="UBF8T346G9"
-            updateTool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
-            updateToolArguments=( --install --apps XCEL2019 )
+            url="https://go.microsoft.com/fwlink/?linkid=525135"
+            expected_team_id="UBF8T346G9"
+            update_tool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
+            update_toolArguments=( --install --apps XCEL2019 )
             ;;
 
         microsoftonedrive)
-            name="OneDrive"
+            app_name="OneDrive.app"
             type="pkg"
-            downloadURL="https://go.microsoft.com/fwlink/?linkid=823060"
-            expectedTeamID="UBF8T346G9"
-            updateTool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
-            updateToolArguments=( --install --apps ONDR18 )
+            url="https://go.microsoft.com/fwlink/?linkid=823060"
+            expected_team_id="UBF8T346G9"
+            update_tool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
+            update_toolArguments=( --install --apps ONDR18 )
             ;;
 
         microsoftonenote)
-            name="Microsoft OneNote"
+            app_name="Microsoft OneNote.app"
             type="pkg"
-            downloadURL="https://go.microsoft.com/fwlink/?linkid=820886"
-            expectedTeamID="UBF8T346G9"
-            updateTool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
-            updateToolArguments=( --install --apps ONMC2019 )
+            url="https://go.microsoft.com/fwlink/?linkid=820886"
+            expected_team_id="UBF8T346G9"
+            update_tool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
+            update_toolArguments=( --install --apps ONMC2019 )
             ;;
 
         microsoftoutlook)
-            name="Microsoft Outlook"
+            app_name="Microsoft Outlook.app"
             type="pkg"
-            downloadURL="https://go.microsoft.com/fwlink/?linkid=525137"
-            expectedTeamID="UBF8T346G9"
-            updateTool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
-            updateToolArguments=( --install --apps OPIM2019 )
+            url="https://go.microsoft.com/fwlink/?linkid=525137"
+            expected_team_id="UBF8T346G9"
+            update_tool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
+            update_toolArguments=( --install --apps OPIM2019 )
             ;;
 
         microsoftpowerpoint)
-            name="Microsoft PowerPoint"
+            app_name="Microsoft PowerPoint.app"
             type="pkg"
-            downloadURL="https://go.microsoft.com/fwlink/?linkid=525136"
-            expectedTeamID="UBF8T346G9"
-            updateTool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
-            updateToolArguments=( --install --apps PPT32019 )
+            url="https://go.microsoft.com/fwlink/?linkid=525136"
+            expected_team_id="UBF8T346G9"
+            update_tool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
+            update_toolArguments=( --install --apps PPT32019 )
             ;;
 
         microsoftremotedesktop)
-            name="Microsoft Remote Desktop"
+            app_name="Microsoft Remote Desktop.app"
             type="pkg"
-            downloadURL="https://go.microsoft.com/fwlink/?linkid=868963"
-            expectedTeamID="UBF8T346G9"
-            updateTool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
-            updateToolArguments=( --install --apps MSRD10 )
+            url="https://go.microsoft.com/fwlink/?linkid=868963"
+            expected_team_id="UBF8T346G9"
+            update_tool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
+            update_toolArguments=( --install --apps MSRD10 )
             ;;
 
         microsoftsharepointplugin)
-            name="MicrosoftSharePointPlugin"
+            app_name="MicrosoftSharePointPlugin.app"
             type="pkg"
-            downloadURL="https://go.microsoft.com/fwlink/?linkid=800050"
-            expectedTeamID="UBF8T346G9"
-            # TODO: determine blockingProcesses for SharePointPlugin
+            url="https://go.microsoft.com/fwlink/?linkid=800050"
+            expected_team_id="UBF8T346G9"
+            # TODO: determine blocking_processes for SharePointPlugin
             ;;
 
         microsoftteams)
-            name="Microsoft Teams"
+            app_name="Microsoft Teams.app"
             type="pkg"
-            downloadURL="https://go.microsoft.com/fwlink/?linkid=869428"
-            expectedTeamID="UBF8T346G9"
-            blockingProcesses=( Teams "Microsoft Teams Helper" )
-            updateTool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
-            updateToolArguments=( --install --apps TEAM01 )
+            url="https://go.microsoft.com/fwlink/?linkid=869428"
+            expected_team_id="UBF8T346G9"
+            blocking_processes=( Teams "Microsoft Teams Helper" )
+            update_tool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
+            update_toolArguments=( --install --apps TEAM01 )
             ;;
 
         microsoftword)
-            name="Microsoft Word"
+            app_name="Microsoft Word.app"
             type="pkg"
-            downloadURL="https://go.microsoft.com/fwlink/?linkid=525134"
-            expectedTeamID="UBF8T346G9"
-            updateTool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
-            updateToolArguments=( --install --apps MSWD2019 )
+            url="https://go.microsoft.com/fwlink/?linkid=525134"
+            expected_team_id="UBF8T346G9"
+            update_tool="/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate"
+            update_toolArguments=( --install --apps MSWD2019 )
             ;;
 
         visualstudiocode)
-            name="Visual Studio Code"
+            app_name="Visual Studio Code.app"
             type="zip"
-            downloadURL="https://go.microsoft.com/fwlink/?LinkID=620882"
-            expectedTeamID="UBF8T346G9"
+            url="https://go.microsoft.com/fwlink/?LinkID=620882"
+            expected_team_id="UBF8T346G9"
             appName="Visual Studio Code.app"
-            blockingProcesses=( Electron )
+            blocking_processes=( Electron )
             ;;
     esac
 }
 
 
-return_current_app_version() {
+return_installed_app_version() {
     # Return the current application version
     #
     # $1 - Is the full path to the application.
@@ -452,7 +502,7 @@ return_current_app_version() {
 get_latest_downloadable_version() {
     # Return the latest app version
 
-    os_version="$1"
+    local os_version="$1"
 
     ## Set the User Agent string for use with curl
 	user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X $os_version) AppleWebKit/535.6.2 (KHTML, like Gecko) Version/5.2 Safari/535.6.2"
@@ -461,56 +511,6 @@ get_latest_downloadable_version() {
 
     # Return the latest version
     printf "%s\n" "$lv"
-}
-
-
-verify_installer_team_id() {
-    # Verify the Team ID associated with the installation media.
-    #
-    # Args:
-    #   $1: The path to the install media.
-    installer_path="$1"
-
-    verified=False
-
-    if [[ "$(/usr/bin/basename $installer_path | /usr/bin/awk -F '.' '{print $NF}')" == "pkg" ]]; then
-        # Validate a .pkg
-
-        received_team_id="$(/usr/sbin/spctl -a -vv -t install $installer_path 2>&1 | \
-            /usr/bin/awk '/origin=/ {print $NF}' | /usr/bin/tr -d '()')"
-        ret="$?"
-
-        # Make sure that we didn't receive an error from spctl
-        if [[ "$ret" -ne 0 ]]; then
-            printf "Error validating $installer_path ...\n"
-            printf "Exiting installer ...\n"
-            exit "$ret"
-        fi
-
-    else
-        # Validate a .app
-        received_team_id="$(/usr/sbin/spctl -a -vv $installer_path 2>&1 | \
-            /usr/bin/awk '/origin=/ {print $NF}' | /usr/bin/tr -d '()')"
-        ret="$?"
-
-        # Make sure that we didn't receive an error from spctl
-        if [[ "$ret" -ne 0 ]]; then
-            printf "Error validating $installer_path ...\n"
-            printf "Exiting installer ...\n"
-            exit "$ret"
-        fi
-
-    fi
-
-    # Check to see if the Team IDs are not equal
-    if [[ "$received_team_id" == "$EXPECTED_TEAM_ID" ]]; then
-        verified=True
-    else
-        verified=False
-    fi
-
-    # Return verified
-    printf "$verified\n"
 }
 
 
@@ -592,6 +592,56 @@ compare_versions() {
 }
 
 
+verify_installer_team_id() {
+    # Verify the Team ID associated with the installation media.
+    #
+    # Args:
+    #   $1: The path to the install media.
+    installer_path="$1"
+
+    verified=False
+
+    if [[ "$(/usr/bin/basename $installer_path | /usr/bin/awk -F '.' '{print $NF}')" == "pkg" ]]; then
+        # Validate a .pkg
+
+        received_team_id="$(/usr/sbin/spctl -a -vv -t install $installer_path 2>&1 | \
+            /usr/bin/awk '/origin=/ {print $NF}' | /usr/bin/tr -d '()')"
+        ret="$?"
+
+        # Make sure that we didn't receive an error from spctl
+        if [[ "$ret" -ne 0 ]]; then
+            printf "Error validating $installer_path ...\n"
+            printf "Exiting installer ...\n"
+            exit "$ret"
+        fi
+
+    else
+        # Validate a .app
+        received_team_id="$(/usr/sbin/spctl -a -vv $installer_path 2>&1 | \
+            /usr/bin/awk '/origin=/ {print $NF}' | /usr/bin/tr -d '()')"
+        ret="$?"
+
+        # Make sure that we didn't receive an error from spctl
+        if [[ "$ret" -ne 0 ]]; then
+            printf "Error validating $installer_path ...\n"
+            printf "Exiting installer ...\n"
+            exit "$ret"
+        fi
+
+    fi
+
+    # Check to see if the Team IDs are not equal
+    if [[ "$received_team_id" == "$EXPECTED_TEAM_ID" ]]; then
+        verified=True
+    else
+        verified=False
+    fi
+
+    # Return verified
+    printf "$verified\n"
+}
+
+
 install_package() {
     # Install a .pkg file.
     #
@@ -610,6 +660,11 @@ install_package() {
         /usr/bin/logger "Failed to install $pkg ..."
         RESULT=1
     fi
+}
+
+
+install_dmg() {
+    echo "Would install a .dmg file ..."
 }
 
 
