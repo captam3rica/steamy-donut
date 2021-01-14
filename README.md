@@ -15,8 +15,7 @@ Easily download and install software that is available directly from the interne
 ## Usage
 
 ```
-usage: steamydonut.zsh [-h] --app-name <"app_name"> --app-version <version> --pkg-name <"package_name"> 
-[--path <full_path>] [--list-donuts] [--get-donut <keyword>] [--version]
+usage: steamydonut.zsh [-h] [--list-donuts] [--get-donut <keyword>] [--version]
 
 Easily install locally packaged apps without installing over a newer version, or download and install publicly 
 avaialble apps directly from the internet.
