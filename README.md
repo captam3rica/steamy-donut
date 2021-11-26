@@ -15,23 +15,20 @@ Easily download and install software that is available directly from the interne
 ## Usage
 
 ```
-usage: steamydonut.zsh [-h] --app-name <"app_name"> --app-version <version> --pkg-name <"package_name"> 
-[--path <full_path>] [--list-donuts] [--get-donut <keyword>] [--version]
+usage: steamydonut.zsh [-h] [--donut-menu] [--donut-recipe <keyword>] [--order-donut <keyword>] [--version]
 
-Easily install locally packaged apps without installing over a newer version, or download and install publicly 
+Easily install locally packaged apps without installing over a newer version, or download and install publicly
 avaialble apps directly from the internet.
-
 arguments:
-      --list-donuts   See a list of apps available for internet download.
+      --donut-menu            See a list of apps available for internet download.
+      --donut-recipe          See more info about a particular app.
+      --order-donut           Download and install specified app from the internet. For example, to download and
+                              install the latest version of Google Chrome use the following flag and app keyword:
 
-      --get-donut     Download and install specified app from the internet. For example, to download and 
-                      install the latest version of Google Chrome use the following flag and app keyword: 
+                                  steamydonut.zsh --order-donut googlechrome
 
-                          steamydonut.zsh --get-donut googlechrome
-
-      --version       Print current version of steamydonut.zsh
-
-      -h, --help      Print this help message.
+      --version               Print current version of steamydonut.zsh
+      -h, --help              Print this help message.
 
 examples:
 ```
@@ -49,4 +46,5 @@ examples:
 
 ✅ - Turn this tool into a command line Utility  
 🔲 - handle .dmg installs  
+🔲 - Make the menu dynamic
 🔲 - Add builtin internet installers for common apps
