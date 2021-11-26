@@ -269,7 +269,7 @@ return_app_download_info() {
             release_name="mac-arm64.dmg"
         fi
         url="$(get_github_download_url vercel hyper $release_name)"
-        expected_team_id=""
+        expected_team_id="JW6Y669B67"
         ;;
 
     lowprofile)
@@ -277,7 +277,7 @@ return_app_download_info() {
         file_type="pkg"
         release_name="Low.Profile.*.pkg" # Use a wild card to match the latest version
         url="$(get_github_download_url ninxsoft LowProfile $release_name)"
-        expected_team_id="JW6Y669B67"
+        expected_team_id="7K3HVCLV7Z"
         ;;
 
     microsoftautoupdate)
