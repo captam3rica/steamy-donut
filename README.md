@@ -46,5 +46,5 @@ examples:
 
 ✅ - Turn this tool into a command line Utility  
 🔲 - handle .dmg installs  
-🔲 - Make the menu dynamic
+🔲 - Make the menu dynamic  
 🔲 - Add builtin internet installers for common apps
