@@ -6,7 +6,7 @@
 ![](https://img.shields.io/badge/macOS-10.14%2B-success)&nbsp;
 
 <p align=center>
-<b>NOTE</b>: THE CONTENTS OF THIS REPO ARE A WORK IN PROGRESS ... PLEASE TEST IN YOUR ENVIRONMENT BEFORE PUTTING INTO PRODUCTION AND FEEDBACK IS APPRECIATED ☺️
+<b>NOTE</b>: THE CONTENTS OF THIS REPO ARE A WORK IN PROGRESS ... PLEASE TEST IN YOUR ENVIRONMENT BEFORE PUTTING INTO PRODUCTION ☺️
 </p>
 
 Easily download and install software that is available directly from the internet. (Examples: Google Chrome Browser, FireFox, Microsoft Office Suite)
